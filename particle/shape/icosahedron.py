@@ -9,10 +9,9 @@ from .polyhedron import *
 
 class icosahedron(polyhedron):
     '''
-    Icosahedronを与えるクラス。
-    内部変数として一辺の長さ、オイラー回転角等を持つ。
+    Icosahedron.
 
-    __init__中の引数について。
+    < Input parameters of __init__() >
         a       : length of edge
         kwargs  : options
     '''
@@ -24,7 +23,7 @@ class icosahedron(polyhedron):
 
     def __init__(self, a, *args, **kwargs):
         """
-            クラスの初期化。
+        Initialization
         """
 
         self.gamma = [62.1, 64.1, 67.3] # (111), (110), (100)
@@ -141,6 +140,6 @@ class icosahedron(polyhedron):
 
     def info(self):
         """
-            particleshapeメソッドで生成するための情報を返す
+        Get information to make one object by `particleshape`.
         """
         return dict(shape_name=self._shape_name, a=self.a, NN=self._NN, DD=self.DD, kwargs=self._kwargs)

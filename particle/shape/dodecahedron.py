@@ -9,15 +9,14 @@ from .shapeslice import shapeslice
 
 class dodecahedron(shapeslice):
     '''
-        Dodecahedronを与えるクラス。
-        内部変数として一辺の長さ、オイラー回転角等を持つ。
+    Dodecahedron. (under construction.)
 
-        __init__中の引数について。
-            a: length of edge
-            euler: Euler angle for rotation (1*3 array / 3-point list)
-            permute: direction for plotting
-            chamfer: degree of chamferring
-            rand: flag for random-depth chamferring
+    < Input parameters of __init__() >
+        a: length of edge
+        euler: Euler angle for rotation (1*3 array / 3-point list)
+        permute: direction for plotting
+        chamfer: degree of chamferring
+        rand: flag for random-depth chamferring
     '''
     def __init__(self, a, *args, **kwargs):
         self.__shape_name = 'dodecahedron'

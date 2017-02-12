@@ -9,12 +9,11 @@ from .polyhedron import *
 
 class cuboctahedron(polyhedron):
     '''
-        Cuboctahedronを与えるクラス。
-        内部変数として一辺の長さ、オイラー回転角等を持つ。
+    Cuboctahedron.
 
-        __init__中の引数について。
-            a       : length of edge
-            kwargs  : options
+    < Input parameters of __init__() >
+        a       : length of edge
+        kwargs  : options
     '''
 
     _shape_name = 'cuboctahedron'
@@ -25,7 +24,7 @@ class cuboctahedron(polyhedron):
 
     def __init__(self, a, *args, **kwargs):
         """
-            クラスの初期化。
+        Initialization
         """
 
         self.gamma = [62.1, 64.1, 67.3] # (111), (110), (100)
@@ -55,8 +54,8 @@ class cuboctahedron(polyhedron):
 
     def vertices(self, a):
         """
-            頂点を取得する。
-            a   : 一辺の長さ
+        Get vertices.
+        a   : edge length
         """
         out = np.zeros((3, 12))
         out[0, :] = a/np.sqrt(2)*np.array([1,0,-1,0,1,-1,-1,1,1,0,-1,0])
@@ -66,8 +65,8 @@ class cuboctahedron(polyhedron):
 
     def midpoints(self, a):
         """
-            辺の中点を取得して返す。
-            a   : 一辺の長さ
+        Get midpoints of edges.
+        a   : edge length
         """
         # Parameters.
         edges = 24
@@ -126,6 +125,6 @@ class cuboctahedron(polyhedron):
         out[:, count] = np.array([(x_bot[3] + x_bot[0])/2, (y_bot[3] + y_bot[0])/2, (z_bot[3] + z_bot[0])/2])
 
         return out
-        
+
     def info(self):
         return dict(shape_name=self._shape_name, a=self.a, NN=self._NN, DD=self.DD, kwargs=self._kwargs)

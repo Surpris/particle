@@ -9,28 +9,24 @@ from .polyhedron import *
 
 class wulffpolyhedron(polyhedron):
     '''
-    Wulff polyhedronを与えるクラス。
-    内部変数として一辺の長さ、オイラー回転角等を持つ。
+    Wulff polyhedron.
 
-    __init__中の引数について。
+    < Input parameters of __init__() >
         a       : length of edge
         kwargs  : options
     '''
 
     _shape_name = 'wulffpolyhedron'
-    # 最初の時点では頂点などの数はわからないためゼロに設定しておく。
     n_vertices = 0
     n_edges = 0
     n_faces = 0
     n_shapeinfo = n_vertices + n_edges + n_faces
 
-    # 一応、 (111), (110), (100) の普通の場合の辺などの数を提供できるようにしておく。
     n_vertices_111_110_100 = 48
     n_edges_111_110_100 = 72
     n_faces_111_110_100 = 26
     n_shapeinfo_111_110_100 = n_vertices_111_110_100 + n_edges_111_110_100 + n_faces_111_110_100
 
-    # 同様に、 (111), (100) の普通の場合の辺などの数を提供できるようにしておく。
     n_vertices_111_100 = 24
     n_edges_111_100 = 36
     n_faces_111_100 = 14
@@ -38,7 +34,7 @@ class wulffpolyhedron(polyhedron):
 
     def __init__(self, a, *args, **kwargs):
         """
-            クラスの初期化
+        Initialization
         """
 
         polytype = kwargs.get('polytype')
@@ -95,9 +91,6 @@ class wulffpolyhedron(polyhedron):
         self._kwargs = kwargs
 
     def vertices(self, a, gamma=[62.1, 64.1, 67.3]):
-        """
-            2016/09/28 (Wed.) 現在、 `111_110_100` のタイプの場合しか実装されていない。
-        """
         gamma_max = max(gamma)
 
         # Coefficient matices of first quadrant.
@@ -133,9 +126,6 @@ class wulffpolyhedron(polyhedron):
 
 
     def midpoints(self, a, gamma=[62.1, 64.1, 67.3]):
-        """
-            2016/09/28 (Wed.) 現在、 `111_110_100` のタイプの場合しか実装されていない。
-        """
         vert = self.vertices(a, gamma)
 
         out1 = np.zeros((3,10))
@@ -174,6 +164,6 @@ class wulffpolyhedron(polyhedron):
 
     def info(self):
         """
-            particleshapeメソッドで生成するための情報を返す
+        Get information for generating one object by `particleshape`.
         """
         return dict(shape_name=self._shape_name, a=self.a, NN=self._NN, DD=self.DD, kwargs=self._kwargs)

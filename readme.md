@@ -1,7 +1,8 @@
 particle module
 =====
 
-This module aims to calculate scattered images from a given shape by using the Multi-slice Fourier transform (MSFT) method.
+This module aims to calculate scattered images from a given shape by using the Multi-slice Fourier transform (MSFT) method.   
+**There are still some comments in Japanese in files.**   
 
 # Requirement
 This module has dependencies on the following modules.
@@ -43,8 +44,8 @@ The following shapes are available:
 * cube
 * cuboctahedron
 * hailstone / hailstone_with_sphere
-  + The primary purpose of `hailstone_with_sphere` is to randomly generate a hail model with daughter clusters centered on the surface of the mother cluster.
-  + `hailstone` generates a hail model using arguments (list of) of information on types, sizes and positions of a mother cluster and daughter clusters.
+  + The primary purpose of `hailstone_with_sphere` is to randomly generate a hail model with daughter particles centered on the surface of the mother particle.
+  + `hailstone` generates a hail model using arguments (list of) of information on types, sizes and positions of a mother particle and daughter particles.
 * icosahedron
 * sphere
 * spheroid

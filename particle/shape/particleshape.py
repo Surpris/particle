@@ -11,8 +11,8 @@ from .polyhedron import *
 
 def particleshape(**info):
     """
-        形状に関する情報から形状を返す
-        `info`はshape_name, a, kwargsからなる。
+    Generate one object according to `info`.
+    `info` must have `shape_name`, `a`, and `kwargs`.
     """
     shape_lower = info.get("shape_name")
     a = info.get("a")

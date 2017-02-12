@@ -4,11 +4,7 @@ from .shapeslice import shapeslice
 
 class spheroid(shapeslice):
     '''
-        楕円体クラス。
-        内部変数としてx軸、y軸、z軸の半分の長さ、および中心をもつ。
-        <remarks/>
-            将来的にはEuler回転に対応させたい。
-        </remarks>
+    Spheroid.
     '''
     def __init__(self, ax, **kwargs):
         self._shape_name = 'spheroid'
@@ -30,8 +26,7 @@ class spheroid(shapeslice):
 
     def info(self):
         """
-            particleshapeメソッドで生成するための情報を返す
-            モデル生成に必要なものと、外部で利用する値を返す
+        Get information to make one object by `particleshape`.
         """
         if self._shape_name == 'sphere':
             _kwargs = dict(a_range=self.a_range, center=self.center)

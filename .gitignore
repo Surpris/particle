@@ -30,3 +30,8 @@ _ReSharper*/
 *.pyc
 dist/
 particle.egg-info/
+data/
+notebooks/
+images/
+scripts/
+job/

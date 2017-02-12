@@ -7,12 +7,13 @@ from ..core import mathfunctions as mf
 
 class hailstone_with_sphere(object):
     '''
-        形状１の表面にいくらかの球がめり込んだような雹状の形状を与えるクラス。
-        形状１の表面上の点を引数として球を構築する。
+    Hailstone.
+    The primary purpose of this class is to randomly generate a hail model
+    with daughter particles centered on the surface of the mother particle.
     '''
     def __init__(self, shape, *args, **kwargs):
         '''
-            初期化。このとき親形状１は形状クラスを渡す。
+        Initialization
         '''
         self.__shape_name = shape.shape_name()
         self.__shape = shape
@@ -161,38 +162,31 @@ class hailstone_with_sphere(object):
 
 class hailstone(object):
     '''
-        雹形クラスターを生成するクラス。
-        母クラスターと娘クラスターの種類、サイズ、位置を指定して生成できるようにする。
-        娘クラスターのサイズと位置をランダムに与えて生成する機能はオプションとする。
-        つまり外部で初期位置などを与えるようにする。
-        娘クラスターは母クラスターから離れていないことを想定しているが、今のところエラー処理はしない。
-            （娘クラスターの半径） + （母クラスターの半径） >= （中心間の距離）
-        また、娘クラスターの中心は母クラスターの中心からの相対位置とする。
-
-        スライスは "(mother) | (dauguters)" でのみ与えるものとして、ほかの余計なオプションは与えない。
-        （例えば"superpos" modeなどは別のクラスで与える）
+    Hailstone.
+    This class generates a hail model using arguments (list of) of information
+    on types, sizes and positions of a mother particle and daughter particles.
     '''
     def __init__(self, shape_mother, shape_daughters, *args, **kwargs):
         '''
-            クラスの初期化。
-            < Input parameters >
-                shape_mother     : 母クラスターオブジェクト
-                shape_daughters  : 娘クラスターオブジェクトまたはそのリスト
-                *args            : オプション
-                **kwargs         : オプション
+        Initialization
+        < Input parameters >
+            shape_mother     : Mother-particle object
+            shape_daughters  : Daughter-particle(s) object (or list of objects)
+            *args: option
+            **kwargs: option
         '''
         self._shape_name = "hailstone"
 
         self.__shape_mother = shape_mother
         self.__shape_daughters = shape_daughters
 
-        # 娘クラスターの数を計算
+        # Calculate # of daughters
         if type(shape_daughters) != list:
             self.__n_daughters = 1
         else:
             self.__n_daughters = len(self.__shape_daughters)
 
-        # 各クラスターの種類を保持する
+        # Store information on types of each paticle
         self.__shape_name_mother = shape_mother.shape_name()
         self.__shape_name_daughters = []
         if type(shape_daughters) != list:
@@ -201,7 +195,7 @@ class hailstone(object):
             for daughter in shape_daughters:
                 self.__shape_name_daughters.append(daughter.shape_name())
 
-        # 各クラスターの中心の位置情報を保持する
+        # Store the centers of each particle
         self.center = shape_mother.center
         self.center_daughters = np.zeros((self.__n_daughters, 3), dtype=float)
         if type(shape_daughters) != list:
@@ -210,16 +204,16 @@ class hailstone(object):
             for ii, daughter in enumerate(shape_daughters):
                 self.center_daughters[ii,:] = daughter.center[:]
 
-        # Euler回転前の情報を保持
+        # Store the centers of daughters before Euler poration
         self.__center_daughters = self.center_daughters.copy()
 
-        # 各クラスターの中心と原点の間の距離を保持する
+        # Store distances of each daughters' center from the origin
         self.d_center = np.linalg.norm(self.center)
         self.d_center_daughters = []
         for _ in self.center_daughters:
             self.d_center_daughters.append(np.linalg.norm(_))
 
-        # 各クラスターの特徴的長さの情報を保持する
+        # Store characteristic lengths of each particle
         self.a_mother = shape_mother.a
         self.a_daughters = []
         if type(shape_daughters) != list:
@@ -228,7 +222,7 @@ class hailstone(object):
             for daughter in shape_daughters:
                 self.a_daughters.append(daughter.a)
 
-        # 各クラスターの空間的広がり "a_ratio" を保持する
+        # Store the extensive ranges "a_ratio" of each particle
         self.a_range_mother = shape_mother.a_range
         self.a_range_daughters = []
         if type(shape_daughters) != list:
@@ -237,7 +231,7 @@ class hailstone(object):
             for daughter in shape_daughters:
                 self.a_range_daughters.append(daughter.a_range)
 
-        # このオブジェクトの特徴的長さと空間的広がりを計算
+        # Calculate the characteristic length and extensive range of `self`.
         self.a = self.a_mother
         for _a, _d in zip(self.a_daughters, self.d_center_daughters):
             self.a = max([self.a, _d + _a])
@@ -248,25 +242,25 @@ class hailstone(object):
 
     def shape_name(self):
         """
-            クラスターの種類を取得する。
+        Get types of `self`.
         """
         return self._shape_name
 
     def shape_name_mother(self):
         """
-            母クラスターの種類を取得する。
+        Get the type of mother.
         """
         return self.__shape_name_mother + ""
 
     def shape_name_daughters(self):
         """
-            娘クラスターの種類を取得する。
+        Get the types of each daughter
         """
         return self.__shape_name_daughters[:]
 
     def n_daughters(self):
         """
-            娘クラスターの数を取得する。
+        Get the number of daughters.
         """
         return self.__n_daughters
 
@@ -284,10 +278,10 @@ class hailstone(object):
 
     def GetCenterOfDaughters(self, angle=False, original=False):
         """
-            娘クラスターの中心の位置を取得する。
-            < Input parameters >
-                angle : True = return daughters' positions as polar coordinates (r, theta, phi)
-                original : True = return daughters' original positions.
+        Get the centers of each daughter.
+        < Input parameters >
+            angle : True = return daughters' positions as polar coordinates (r, theta, phi)
+            original : True = return daughters' original positions.
         """
         if original is True:
             buff = self.__center_daughters.copy()
@@ -303,10 +297,10 @@ class hailstone(object):
 
     def EulerRot(self, euler):
         """
-            ToDo: 次の実装
-                1. 母クラスターを回転（実装済み）
-                2. 娘クラスターの中心位置を回転（実装済み）
-                3. 娘クラスターを回転
+        ToDo:
+            1. Rotate the mother (finished)
+            2. Rotate the daughters around the origin（finished）
+            3. Rotate the daughters around their own centers
         """
         # self.__shape_mother.EulerRot(euler)
         # self.center_daughters = mf.EulerRotation(self.center_daughters, euler, 1).copy()
@@ -314,25 +308,24 @@ class hailstone(object):
 
     def Slice(self, xx, yy, z, *args, **kwargs):
         """
-            断面のスライスを返す。
-            < Input parameters >
-                xx, yy  : 2D coordinates (N*M arrays)
-                z       : z coordinate
-                *args   : Option
-                **kwargs: Option
+        Get the slice at the coordinate `z`.
+        < Input parameters >
+            xx, yy  : 2D coordinates (N*M arrays)
+            z       : z coordinate
+            *args   : Option
+            **kwargs: Option
         """
 
-        # 母クラスターのスライス。
+        # Slice of mother
         ind = self.__shape_mother.Slice(xx, yy, z)
 
-        # 娘クラスターのスライス。
-        # "z" 周りに存在する娘クラスターのみを対象にする。
+        # Slice of daughters
         ind_hit = np.where(abs(z - self.center_daughters[:,2]) <= self.a_range_daughters)[0]
         for jj in ind_hit:
             ind_daughter = self.__shape_daughters[jj].Slice(xx, yy, z)
             ind |= ind_daughter
 
-        # インデックスで返すかどうか。
+        # Select indices or coordinates.
         is_ind = True if kwargs.get('is_ind') is None else kwargs.get('is_ind')
         if is_ind is True:
             return ind
@@ -346,6 +339,6 @@ class hailstone(object):
 
     def SliceSurface(self, xx, yy, z, width, *args, **kwargs):
         """
-            表面のスライスを返す。（未実装、今のところ実装は考えていない）
+        Get surface slice. (not supported)
         """
         return self.Slice(xx, yy, z, *args, **kwargs)

@@ -1,18 +1,15 @@
 # -*- coding: utf-8 -*-
 
-# System modules
 import numpy as np
 
 class shapeslice(object):
     '''
-        粒子の断面を計算するメソッドクラス。
-        規則正しい単粒子でのみ利用可能。
-        ほかの形状の粒子は個別に実装する。
+    Method class which calculates the section of a single particle.
     '''
 
     def __init__(self, shape_name, *args, **kwargs):
         """
-            クラスの初期化。
+        Initialization
         """
         if shape_name in ['sphere', 'spheroid']:
             self.ax = args[0]
@@ -34,7 +31,7 @@ class shapeslice(object):
 
     def __SpheroidSlice(self, xx, yy, z, *args, **kwargs):
         '''
-            楕円体の断面の位置もしくはインデックスを与える。
+        Get the positions or indices of the section of the ellipsoid at `z`.
         '''
         is_ind = True if kwargs.get('is_ind') is None else kwargs.get('is_ind')
 
@@ -53,7 +50,7 @@ class shapeslice(object):
 
     def __SpheroidSliceSurface(self, xx, yy, z, width, **kwargs):
         """
-            位置zにおける楕円体の断面の輪郭の位置もしくはインデックスを与える。
+        Get the positions or indices of the profile of the cross section of the ellipsoid at position z.
         """
         is_ind = True if kwargs.get('is_ind') is None else kwargs.get('is_ind')
         x2 = (xx-self.center[0])**2/self.ax**2
@@ -73,7 +70,7 @@ class shapeslice(object):
 
     def __PolygonSlice(self, xx, yy, z, *args, **kwargs):
         '''
-        多面体の断面の位置もしくはインデックスを与える。
+        Get the positions or indices of the section of polyhedron at `z`.
         '''
         is_ind = True if kwargs.get('is_ind') is None else kwargs.get('is_ind')
 
@@ -95,7 +92,7 @@ class shapeslice(object):
 
     def __PolygonSliceSurface(self, xx, yy, z, width, **kwargs):
         """
-            位置zにおける多面体の断面の輪郭の位置もしくはインデックスを与える。
+        Get the positions or indices of the profile of the cross section of polyhedron at position z.
         """
         is_ind = True if kwargs.get('is_ind') is None else kwargs.get('is_ind')
         ind_body = self.Slice(xx, yy, z)
@@ -118,15 +115,15 @@ class shapeslice(object):
 
     def EulerRot(self, *args, **kwargs):
         """
-            オイラー回転操作の関数。
-            デフォルトでは操作を行わない（継承用）。
+        Euler rotation.
+        This function is for override.
         """
         pass
 
     def UpdSlice(self, *args, **kwargs):
         """
-            自身を更新する関数。
-            デフォルトでは操作を行わない（継承用）。
+        Update self.
+        This function is for override.
         """
         pass
 

@@ -9,10 +9,9 @@ from .polyhedron import *
 
 class cube(polyhedron):
     '''
-    立方体を与えるクラス。
-    内部変数として一辺の長さ、オイラー回転角等を持つ。
+    cube class.
 
-    __init__中の引数について。
+    < Input parameters of __init__() >
         a       : length of edge
         kwargs  : options
     '''
@@ -21,7 +20,7 @@ class cube(polyhedron):
     n_faces = 6
     def __init__(self, a, *args, **kwargs):
         """
-            クラスの初期化。
+        Initialization
         """
         self.__shape_name = 'cube'
 
