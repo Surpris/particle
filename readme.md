@@ -15,7 +15,7 @@ This module has dependencies on the following modules.
 * datetime
 * importlib
 
-If you want to do calculation with `pyfftw` or `skcuda`, the following modules are also required.
+If you want to do calculation with `pyfftw` or `pycuda`, the following modules are also required.
 
 * pyfftw (for pyfftw)
 * multiprocessing (for pyfftw)
