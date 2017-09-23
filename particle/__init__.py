@@ -14,5 +14,5 @@ if __PARTICLE_SETUP__:
     del _sys
 else:
     from . import core
-    from .core import ensemble_system
+    from .core import ensemble_system, particle
     from . import shape
