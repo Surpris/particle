@@ -10,66 +10,54 @@ from numpy.fft import *
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 from mpl_toolkits.mplot3d import Axes3D
-# import sys
-# sys.path.append("./")
 
 # User modules
-# from . import core
 from . import mathfunctions as mf
 from . import folderfunctions as ff
-# from . import slicefft
 from .slicefft import slicefft
-# from . import shape
 from ..shape import *
 
 class ensemble_system(slicefft):
-    __doc__ = '''
-        粒子の集団とslicefftをつなぐ扱うクラス。
-        初期化にはslicefftに関するキーワードと粒子の集団`ensemble`に関するキーワードが必要。
-        < slicefft関連 >
-            kw_slicefft : slicefftに関するキーワードを含むdictオブジェクト。
-                N           : x軸方向のサイズの分割数
-                xmax        : x軸方向のサイズ
-                kwargs      : オプション。例えばy軸方向の分割数`ymax`や、
-                              計算対象とする散乱ベクトルの大きさの最大値`kmax`
-        < ensemble関連 >
-            kw_shapes   : 各粒子の情報（dictオブジェクト）またはそのリスト
-                shape_name  : 形状の名称
-                a           : 形状の特徴的長さ
-                kwargs      : オプション。例えば中心`center`やEuler角`euler`
+    __doc__ = ''' Class which deal with an ensemble of particles.
+        Both `kwargs` for `slicefft` and `ensemble` are necessary for initialization.
+
+        < kwargs for slicefft >
+            kw_slicefft : dict object including the following arguments.
+                N           : # of points in x-axis direction
+                xmax        : spatial size in x-axis direction
+                kwargs      : option (dict object). See `space` and `slicefft` classes.
+
+        < kwargs for ensemble >
+            kw_shapes   : dict object including the following arguments.
+                shape_name  : name of shape
+                a           : characteristic length of the shape
+                kwargs      : option (dict object). See the classes in `shape` directory.
     '''
 
     def doc():
+        """ Print the documentation of this class """
         for line in ensemble_system.__doc__.split("\n"):
             print(line)
 
     def __init__(self, *args, **kwargs):
-        """
-            クラスの初期化。
-            slicefftに関するキーワードと粒子集団に関するキーワードを別々に扱う。
-            前者はdictとして、後者はdictのリストとして扱う。
-            すでに計算結果がある場合、それをslicefftに関するキーワードに含める。
-            このクラスは`particle`や`Particle`と互換性がない。
-            キーワードは、それぞれに必要なものとオプション（dictオブジェクト）のdictとして与えることが前提。
-            どの場合も`args`のほうが優先される。
-        """
-        if len(args) <= 1: # 0の場合はkwargsをそのまま利用
-            if len(args) == 1: # ファイルのパスか、またはself.saveで出力されたdictファイルの場合
+        """ Initialization """
+        if len(args) <= 1: # if 0 then kwargs is used
+            if len(args) == 1: # file path or a dict object which self.save() outputs
                 if type(args[0]) == str:
-                    with open(args[0], "rb") as f:
-                        kwargs = pickle.load(f)
+                    with open(args[0], "rb") as ff:
+                        kwargs = pickle.load(ff)
                 elif type(args[0]) == dict:
                     kwargs = args[0]
-        elif len(args) == 2: # argsに二つ入っている場合
+        elif len(args) == 2:
             if type(args[0]) == str:
                 with open(args[0], "rb") as f:
                     kwargs = pickle.load(f)
             elif type(args[0]) == dict:
                 kwargs = dict(kw_slicefft=args[0], kw_shapes=args[1])
-        else: # argsに3つ以上ある場合は受け付けない
+        else: # if len(args) > 3 then raise Exception
             raise Exception('Failure.')
 
-        # パラメータの分離
+        # Separate parameters
         kw_slicefft = kwargs.get("kw_slicefft")
         if kw_slicefft is None or type(kw_slicefft) != dict:
             raise ValueError("Invalid value for `kw_slicefft`.")
@@ -78,28 +66,28 @@ class ensemble_system(slicefft):
         if kw_shapes is None:
             raise KeyError("kw_shapes")
 
-        # slicefftの初期化
-        N = kw_slicefft.get('N'); xmax = kw_slicefft.get('xmax')
+        # Initialize slicefft
+        N = kw_slicefft.get('N')
+        xmax = kw_slicefft.get('xmax')
         options_slicefft = kw_slicefft.get('kwargs')
         slicefft.__init__(self, N, xmax, **options_slicefft)
 
-        # 座標計算用メンバーの初期化
+        # Initialize attributes for calculation of coordinates
         self.__InitCoorInfo()
 
-        # 粒子集団の生成
+        # Generate an ensemble according to the input arguments
         self._shape = ensemble(kw_shapes)
         self._kwargs = copy.deepcopy(kwargs)
 
     def __InitCoorInfo(self):
+        """ Initialize attributes for coordinates """
         self.__coor_types = ['body', 'surf']
         self.__coor = None
         self.__coor_surf = None
         self.__euler = [0,0,0]
 
     def save(self, fpath=None):
-        """
-            ensembbleクラスを生成するための情報を保存する。
-        """
+        """ Save this object as a dict object """
         if fpath is None:
             fpath = "./ensemble.pickle"
         _kw_slicefft = self._kwargs.get("kw_slicefft")
@@ -127,6 +115,7 @@ class ensemble_system(slicefft):
         return self._shape._n_shapes*1
 
     def Coor(self, coor_type='body', *args, **kwargs):
+        """ Calculate the coordinates characterizing the ensemble """
         if self._shape is None:
             raise ValueError("No information on the shape.")
         if coor_type not in self.__coor_types:
@@ -143,7 +132,8 @@ class ensemble_system(slicefft):
 
         self.__is_trunc = False if kwargs.get('is_trunc') is None else kwargs.get('is_trunc')
 
-        _sprange_x, _sprange_y, _sprange_z = self.range_space(self._shape.a_range,self._shape.a_range,self._shape.a_range)
+        _sprange_x, _sprange_y, _sprange_z = \
+            self.range_space(self._shape.a_range,self._shape.a_range,self._shape.a_range)
         _xx, _yy = np.meshgrid(_sprange_x, _sprange_y)
         dx = self.dx()[0]
         buff = np.zeros((1,3), dtype=float)
@@ -163,6 +153,9 @@ class ensemble_system(slicefft):
                 self.__coor_surf = buff[1:buff.shape[0],:]
 
     def GetCoor(self, coor_type='body', **kwargs):
+        """ Return the coordinates characterizing the ensemble
+            if the coordinates has been already calculated then return them
+        """
         if coor_type not in self.__coor_types:
             raise ValueError("coor_type must be '{0}' or'{1}'.".format(self.__coor_types[0], self.__coor_types[1]))
         if coor_type is self.__coor_types[0]:
@@ -207,30 +200,28 @@ class ensemble_system(slicefft):
         return fig, ax
 
 class ensemble(object):
-    """
-        粒子の集団を表現するクラス。
-        `ensemble_system`での利用を想定している。
+    """ Class which represent an ensemble of particles.
+        This class is supposed to be used by `ensemble_system`.
     """
 
     _shape_name = "ensemble"
     def __init__(self, shapes, *args, **kwargs):
-        '''
-            クラスの初期化。
+        ''' Initialization 
             < Input parameters >
-                shapes           : 粒子に与えるキーワードまたはそのリスト
-                *args            : オプション
-                **kwargs         : オプション
+                shapes           : kwargs or list of kwargs of information on particles
+                *args            : option
+                **kwargs         : option
         '''
-        # 各形状のためのキーワードの保持
+        # Keep kwargs of each particle
         if type(shapes) != list:
             self._shapes_kwarg = [shapes]
         else:
             self._shapes_kwarg = shapes
 
-        # 形状の数を計算
+        # Calculate the number of particles
         self._n_shapes = len(self._shapes_kwarg)
 
-        """ 形状の生成と情報の保持 """
+        ### Keep information and generate particles
         self._shapes = [None] * self._n_shapes
         self._shapes_name = [None] * self._n_shapes
         self._centers = np.zeros((self._n_shapes, 3), dtype=float)
@@ -245,7 +236,7 @@ class ensemble(object):
             self._as[ii] = self._shapes[ii].a
             self._as_range[ii] = self._shapes[ii].a_range
 
-        # 粒子集団の空間的広がりを計算
+        # Calculate extension of ensemble
         self.a = self._as[0]
         for _a, _d in zip(self._as, self._centers_d):
             self.a = max([self.a, _d + _a])
@@ -253,7 +244,7 @@ class ensemble(object):
         for _a_range, _d in zip(self._as_range, self._centers_d):
             self.a_range = max([self.a_range, _d + _a_range])
 
-        # 空間のセンターは常に原点
+        # THe center of ensemble is always the center of space
         self.center = [0., 0., 0.,]
 
     def info(self):
@@ -263,18 +254,15 @@ class ensemble(object):
         return kw_list
 
     def shape_name(self):
-        """
-            形状（このクラスは集団であるが）の名称を取得する。
-        """
+        """ Return the name of shape (`ensemble` in case of this class) """
         return self._shape_name
 
     def shapes_name(self):
         return self._shapes_name[:]
 
     def centers(self, polar=False):
-        """
-            各粒子の中心の座標を返す。
-            polarがTrueの場合は極座標(r, theta, phi)で返す。
+        """ Return the center coordinates of each particles.
+            if polar == True then the polar coordinates are returned.
         """
         buff = self._centers.copy()
         if polar is False:
@@ -285,26 +273,21 @@ class ensemble(object):
             phi = np.arctan2(buff[:,1], buff[:,0]) + np.pi
             return r, theta, phi
 
-
     def EulerRot(self, euler):
-        """
-            ToDo: 実装
-        """
+        """ TODO: implementation """
         # self.__shape_mother.EulerRot(euler)
         # self.center_daughters = mf.EulerRotation(self.center_daughters, euler, 1).copy()
         pass
 
     def Slice(self, xx, yy, z, *args, **kwargs):
-        """
-            断面のスライスを返す。
+        """ Return the cross-section of the ensemble.
             < Input parameters >
                 xx, yy  : 2D coordinates (N*M arrays)
                 z       : z coordinate
                 *args   : Option
                 **kwargs: Option
         """
-        # 娘クラスターのスライス。
-        # "z" 周りに存在する娘クラスターのみを対象にする。
+        # Calculate the slices of each particle
         ind_hit = np.where(abs(z - self._centers[:,2]) <= self._as_range)[0]
         if len(ind_hit) <= 0:
             ind = np.zeros(xx.shape, dtype=bool)
@@ -317,7 +300,7 @@ class ensemble(object):
                     ind2 = self._shapes[jj].Slice(xx, yy, z)
                     ind |= ind2
 
-        # インデックスで返すかどうか。
+        # if `is_ind` == True then return the indices
         is_ind = True if kwargs.get('is_ind') is None else kwargs.get('is_ind')
         if is_ind is True:
             return ind
@@ -331,7 +314,7 @@ class ensemble(object):
         pass
 
     def SliceSurface(self, xx, yy, z, width, *args, **kwargs):
-        """
-            表面のスライスを返す（今のところ実装は考えていない）
+        """ Return the surface cross-section.
+            Currently implementation is not considered.
         """
         return self.Slice(xx, yy, z, *args, **kwargs)
