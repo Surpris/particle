@@ -17,3 +17,5 @@ else:
     from .core import *
     from . import shape
     from .shape import *
+    from . import scripts
+    from .scripts import *

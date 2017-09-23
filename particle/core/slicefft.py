@@ -423,7 +423,7 @@ class slicefft(space):
         rangeqx = self._qmax[0,:]*self._qxscale
         rangeqy = self._qmax[1,:]*self._qyscale
 
-        plt.imshow(np.abs(self._F)**2,
+        plt.imshow(np.abs(self._F)**2, aspect="auto", origin="lower",
                    extent=[rangeqx[0], rangeqx[1], rangeqy[0], rangeqy[1]])
         if self._qxlim is not None: plt.xlim(self._qxlim[0], self._qxlim[1])
         if self._qylim is not None: plt.ylim(self._qylim[0], self._qylim[1])
