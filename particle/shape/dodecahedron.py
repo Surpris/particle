@@ -4,7 +4,6 @@ import numpy as np
 
 from .. import core
 from ..core import mathfunctions as mf
-
 from .shapeslice import shapeslice
 
 class dodecahedron(shapeslice):

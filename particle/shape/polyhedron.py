@@ -2,11 +2,8 @@
 
 import numpy as np
 
-from .. import core
 from ..core import mathfunctions as mf
-
 from ..core.space import space
-# from ..space import space
 from .shapeslice import shapeslice
 
 class polyhedron(shapeslice):
@@ -40,7 +37,7 @@ class polyhedron(shapeslice):
             _distance_rate = kwargs.get("distance_rate")
             if type(_distance_rate) == list:
                 _distance_rate = np.array(_distance_rate)
-            if type(_distance_rate) in [float, np.float32]:
+            if type(_distance_rate) in [float, np.float32, np.float64]:
                 self.DD = (1. - _distance_rate) * self.DD
             else:
                 if type(_distance_rate) != np.ndarray:
@@ -58,7 +55,8 @@ class polyhedron(shapeslice):
             self.GG = GG.copy()
         else:
             raise TypeError("`GG` must be an 1-D array.")
-
+        
+        self.gamma_max = self.GG.max()
         self.center = [0., 0., 0.] if kwargs.get('center') is None else kwargs.get('center')
 
         # Check validity of surface
@@ -116,6 +114,11 @@ class polyhedron(shapeslice):
         shapeslice.__init__(self, self._shape_name, self.a,
                             NN=self.NN, DD=self.DD, perm=self.perm, center=self.center)
 
+        # Euler rotation.
+        self.EulerRot(euler)
+
+        self._kwargs = kwargs
+
     def EulerRot(self, euler):
         self.NN = mf.EulerRotation(self._NN, euler, 1)
         self.UpdSlice()
@@ -164,6 +167,8 @@ class polyhedron(shapeslice):
 
         if type(chamfer_rate) == list:
             chamfer_rate = np.array(chamfer_rate)
+        elif type(chamfer_rate) in [float, np.float32, np.float64]:
+            chamfer_rate = chamfer_rate * np.ones(_chamf.shape[0])
 
         if len(chamfer_rate) != _chamf.shape[0]:
             _ = "vertice" if v_or_e == "v" else "edges"
@@ -178,8 +183,6 @@ class polyhedron(shapeslice):
         self._NN = np.vstack((self._NN, _chamf))
         self.DD = np.hstack((self.DD, np.array(_dd)))
         self.GG = np.hstack((self.GG, np.array(_gg)))
-
-        self._kwargs = kwargs
 
     def info(self):
         """

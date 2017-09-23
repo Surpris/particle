@@ -14,8 +14,5 @@ if __PARTICLE_SETUP__:
     del _sys
 else:
     from . import core
-    from .core import *
+    from .core import ensemble_system
     from . import shape
-    from .shape import *
-    from . import scripts
-    from .scripts import *

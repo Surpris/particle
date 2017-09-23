@@ -4,8 +4,7 @@ import numpy as np
 
 from .. import core
 from ..core import mathfunctions as mf
-
-from .polyhedron import *
+from .polyhedron import polyhedron, check_poly_validity
 
 class wulffpolyhedron(polyhedron):
     '''

@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from .shapeslice import shapeslice
 from .spheroid import spheroid
 
 class sphere(spheroid):

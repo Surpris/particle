@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 
-from .cuboctahedron import *
-from .spheroid import *
-from .sphere import *
-from .cube import *
-from .cuboctahedron import *
-from .icosahedron import *
-from .wulffpolyhedron import *
-from .polyhedron import *
+from .spheroid import spheroid
+from .sphere import sphere
+from .cube import cube
+from .cuboctahedron import cuboctahedron
+from .icosahedron import icosahedron
+from .wulffpolyhedron import wulffpolyhedron
+from .polyhedron import polyhedron
 
 def particleshape(**info):
     """
