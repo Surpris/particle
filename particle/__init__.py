@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 __author__ = "Toshiyuki Nishiyama"
-__version__ = "1.0"
+__version__ = "1.0.1"
 
 try:
     __PARTICLE_SETUP__
