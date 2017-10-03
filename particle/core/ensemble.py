@@ -28,10 +28,47 @@ class ensemble_system(slicefft):
                 kwargs      : option (dict object). See `space` and `slicefft` classes.
 
         < kwargs for ensemble >
-            kw_shapes   : dict object including the following arguments.
+            kw_shapes   : dict object or list of dict objests including the following arguments.
                 shape_name  : name of shape
                 a           : characteristic length of the shape
                 kwargs      : option (dict object). See the classes in `shape` directory.
+
+        < Example of using ensemble_system >
+        #--- Start of example ---
+        
+        import numpy as np
+        import sys
+        from particle import ensemble_system
+        import time
+
+        ### Setting of MSFT
+        N = 1024; xmax =2048.0; # Real-space size
+        delta = 1e-4; beta=1e-6; refr = 1 - delta - 1j*beta; # Refractivity
+        params = dict(Ny=N, zmax=256., Nz=256, ymax=xmax, kmax=0.1212*np.pi, refr=refr)
+        kw_slicefft = dict(N=N, xmax=xmax, kwargs=params)
+
+        ### Setting of target
+        Rs = np.array([100., 30.])
+        coors = np.array([[0., 0., 0.], [100., 0., 0.]])
+
+        # kwargs
+        infos = [None] * len(Rs)
+        for ii, _a , _center in zip(range(len(Rs)), Rs, coors):
+            infos[ii] = dict(shape_name="sphere", a=_a, kwargs=dict(center=_center))
+
+        ### ensemble_system
+        st = time.time()
+        ens1 = ensemble_system(kw_slicefft, infos)
+        # Execute MSFT
+        ens1.MSFT(qmode=False, atte=False)
+        # Plot images
+        ens1.PlotRhoF(**dict(qcscale=1/25.))
+        # plt.savefig("../images/image.png", bbox_inches="tight", pad_inches=0.1)
+        print("Elapsed time: {0:.2f} sec.".format(time.time()-st))
+        # Save the model
+        ens1.save("../data/data.ens")]
+
+        #--- End of example ---
     '''
 
     def doc():
