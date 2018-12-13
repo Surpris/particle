@@ -240,7 +240,7 @@ class particle(slicefft):
         self._shape.EulerRot(self.__euler)
         self.SetParticle(self._shape)
 
-    def Slice(self, xx, yy, z, *args, **kawrgs):
+    def Slice(self, xx, yy, z, *args, **kwargs):
         return self._shape.Slice(xx, yy, z, *args, **kwargs)
 
     def Coor(self, coor_type='body', *args, **kwargs):

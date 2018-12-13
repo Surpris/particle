@@ -22,6 +22,8 @@ class polyhedron(shapeslice):
         self._shape_name = "polyhedron" if kwargs.get("shape_name") is None else kwargs.get("shape_name")
         # Get information from kwargs
         euler = kwargs.get('euler')
+        if euler is None:
+            euler = np.array([0, 0, 0])
         permute = kwargs.get('permute')
 
         if type(NN) == list:

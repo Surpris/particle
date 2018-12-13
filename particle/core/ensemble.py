@@ -19,56 +19,56 @@ from ..shape import *
 
 class ensemble_system(slicefft):
     __doc__ = ''' Class which deal with an ensemble of particles.
-        Both `kwargs` for `slicefft` and `ensemble` are necessary for initialization.
+    Both `kwargs` for `slicefft` and `ensemble` are necessary for initialization.
 
-        < kwargs for slicefft >
-            kw_slicefft : dict object including the following arguments.
-                N           : # of points in x-axis direction
-                xmax        : spatial size in x-axis direction
-                kwargs      : option (dict object). See `space` and `slicefft` classes.
+    < kwargs for slicefft >
+        kw_slicefft : dict object including the following arguments.
+            N           : # of points in x-axis direction
+            xmax        : spatial size in x-axis direction
+            kwargs      : option (dict object). See `space` and `slicefft` classes.
 
-        < kwargs for ensemble >
-            kw_shapes   : dict object or list of dict objests including the following arguments.
-                shape_name  : name of shape
-                a           : characteristic length of the shape
-                kwargs      : option (dict object). See the classes in `shape` directory.
+    < kwargs for ensemble >
+        kw_shapes   : dict object or list of dict objests including the following arguments.
+            shape_name  : name of shape
+            a           : characteristic length of the shape
+            kwargs      : option (dict object). See the classes in `shape` directory.
 
-        < Example of using ensemble_system >
-        #--- Start of example ---
-        
-        import numpy as np
-        import sys
-        from particle import ensemble_system
-        import time
+    < Example of using ensemble_system >
+    #--- Start of example ---
+    
+    import numpy as np
+    import sys
+    from particle import ensemble_system
+    import time
 
-        ### Setting of MSFT
-        N = 1024; xmax =2048.0; # Real-space size
-        delta = 1e-4; beta=1e-6; refr = 1 - delta - 1j*beta; # Refractivity
-        params = dict(Ny=N, zmax=256., Nz=256, ymax=xmax, kmax=0.1212*np.pi, refr=refr)
-        kw_slicefft = dict(N=N, xmax=xmax, kwargs=params)
+    ### Setting of MSFT
+    N = 1024; xmax =2048.0; # Real-space size
+    delta = 1e-4; beta=1e-6; refr = 1 - delta - 1j*beta; # Refractivity
+    params = dict(Ny=N, zmax=256., Nz=256, ymax=xmax, kmax=0.1212*np.pi, refr=refr)
+    kw_slicefft = dict(N=N, xmax=xmax, kwargs=params)
 
-        ### Setting of target
-        Rs = np.array([100., 30.])
-        coors = np.array([[0., 0., 0.], [100., 0., 0.]])
+    ### Setting of target
+    Rs = np.array([100., 30.])
+    coors = np.array([[0., 0., 0.], [100., 0., 0.]])
 
-        # kwargs
-        infos = [None] * len(Rs)
-        for ii, _a , _center in zip(range(len(Rs)), Rs, coors):
-            infos[ii] = dict(shape_name="sphere", a=_a, kwargs=dict(center=_center))
+    # kwargs
+    infos = [None] * len(Rs)
+    for ii, _a , _center in zip(range(len(Rs)), Rs, coors):
+        infos[ii] = dict(shape_name="sphere", a=_a, kwargs=dict(center=_center))
 
-        ### ensemble_system
-        st = time.time()
-        ens1 = ensemble_system(kw_slicefft, infos)
-        # Execute MSFT
-        ens1.MSFT(qmode=False, atte=False)
-        # Plot images
-        ens1.PlotRhoF(**dict(qcscale=1/25.))
-        # plt.savefig("../images/image.png", bbox_inches="tight", pad_inches=0.1)
-        print("Elapsed time: {0:.2f} sec.".format(time.time()-st))
-        # Save the model
-        ens1.save("../data/data.ens")]
+    ### ensemble_system
+    st = time.time()
+    ens1 = ensemble_system(kw_slicefft, infos)
+    # Execute MSFT
+    ens1.MSFT(qmode=False, atte=False)
+    # Plot images
+    ens1.PlotRhoF(**dict(qcscale=1/25.))
+    # plt.savefig("../images/image.png", bbox_inches="tight", pad_inches=0.1)
+    print("Elapsed time: {0:.2f} sec.".format(time.time()-st))
+    # Save the model
+    ens1.save("../data/data.ens")]
 
-        #--- End of example ---
+    #--- End of example ---
     '''
 
     def doc():
@@ -127,6 +127,7 @@ class ensemble_system(slicefft):
         """ Save this object as a dict object """
         if fpath is None:
             fpath = "./ensemble.pickle"
+            print("`fpath` is not assigned. Save this object to {}.".format(fpath))
         _kw_slicefft = self._kwargs.get("kw_slicefft")
         _kw_slicefft.update(dict(kwargs=self.fftInfo()))
         _kw = dict(kw_slicefft=_kw_slicefft, kw_shapes=self._shape.info())
@@ -221,7 +222,7 @@ class ensemble_system(slicefft):
             for info in _infos:
                 _center = info.get("kwargs").get("center")
                 _a = info.get("a")
-                ax.plot_surface(_a*x + _center[0], _a*y + _center[1], _a*z + _center[2], rstride=1, cstride=1, color='b', linewidth=0, cmap=cm.ocean)
+                ax.plot_surface(_a*x + _center[0], _a*y + _center[1], _a*z + _center[2], rstride=1, cstride=1, color='b', linewidth=0, cmap=cm.jet)
 
         else:
             if coor_type not in self.__coor_types:
