@@ -7,17 +7,27 @@ from ..core import mathfunctions as mf
 from .shapeslice import shapeslice
 
 class dodecahedron(shapeslice):
-    '''
-    Dodecahedron. (under construction.)
-
-    < Input parameters of __init__() >
-        a: length of edge
-        euler: Euler angle for rotation (1*3 array / 3-point list)
-        permute: direction for plotting
-        chamfer: degree of chamferring
-        rand: flag for random-depth chamferring
-    '''
+    '''dodecahedron class (under construction)'''
+    
     def __init__(self, a, *args, **kwargs):
+        """__init__(self, a, *args, **kwargs) -> None
+        initialize this class.
+
+        Parameters
+        ----------
+        a      : float
+            length of edge
+        args   : options
+        kwargs : options
+            euler   : 3-element list or numpy.1darray
+                Euler angle for rotation
+            permute : 3-element list or numpy.1darray
+                direction for plotting
+            chamfer : float
+                degree of chamferring
+            rand    : bool
+                flag for random-depth chamferring
+        """
         self.__shape_name = 'dodecahedron'
         # Get information from kwargs
         euler = kwargs.get('euler')

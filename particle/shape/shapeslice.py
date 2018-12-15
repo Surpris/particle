@@ -3,13 +3,25 @@
 import numpy as np
 
 class shapeslice(object):
-    '''
-    Method class which calculates the section of a single particle.
-    '''
+    '''method class which calculates the section of a single particle'''
 
     def __init__(self, shape_name, *args, **kwargs):
-        """
-        Initialization
+        """__init__(self, shape_name, *args, **kwargs) -> None
+        initialize this class.
+
+        Parameters
+        ----------
+        shape_name : str
+        args       : options
+        kwargs     : options
+            NN : list or numpy.2darray
+                normal vectors
+            DD : list or numpy.2darray
+                discante from the center of a particle
+            center : 3-element list or numpy.1darray
+                the center of a particle
+            density : float
+                the density of a particle
         """
         if shape_name in ['sphere', 'spheroid']:
             self.ax = args[0]
@@ -31,8 +43,19 @@ class shapeslice(object):
         self.density = 1.0 if kwargs.get("density") is None else kwargs.get("density")
 
     def __SpheroidSlice(self, xx, yy, z, *args, **kwargs):
-        '''
-        Get the positions or indices of the section of the ellipsoid at `z`.
+        '''__SpheroidSlice(self, xx, yy, z, *args, **kwargs) -> numpy.2darray
+        get the positions or indices of the section of the ellipsoid at `z`.
+
+        Parameters
+        ----------
+        xx     : numpy.2darray
+        yy     : numpy.2darray
+        z      : float
+        args   : options
+        kwargs : options
+            is_ind : bool
+                if True, then return the indices of the section.
+                if False, then return the coordinates composing the section.
         '''
         is_ind = True if kwargs.get('is_ind') is None else kwargs.get('is_ind')
 
@@ -50,8 +73,20 @@ class shapeslice(object):
             return out
 
     def __SpheroidSliceSurface(self, xx, yy, z, width, **kwargs):
-        """
+        """__SpheroidSliceSurface(self, xx, yy, z, width, **kwargs) -> numpy.2darray
         Get the positions or indices of the profile of the cross section of the ellipsoid at position z.
+
+        Parameters
+        ----------
+        xx     : numpy.2darray
+        yy     : numpy.2darray
+        z      : float
+        width  : float
+        args   : options
+        kwargs : options
+            is_ind : bool
+                if True, then return the indices of the section.
+                if False, then return the coordinates composing the section.
         """
         is_ind = True if kwargs.get('is_ind') is None else kwargs.get('is_ind')
         x2 = (xx-self.center[0])**2/self.ax**2
@@ -70,8 +105,19 @@ class shapeslice(object):
             return out
 
     def __PolygonSlice(self, xx, yy, z, *args, **kwargs):
-        '''
-        Get the positions or indices of the section of polyhedron at `z`.
+        '''__PolygonSlice(self, xx, yy, z, *args, **kwargs) -> numpy.2darray
+        get the positions or indices of the section of polyhedron at `z`.
+
+        Parameters
+        ----------
+        xx     : numpy.2darray
+        yy     : numpy.2darray
+        z      : float
+        args   : options
+        kwargs : options
+            is_ind : bool
+                if True, then return the indices of the section.
+                if False, then return the coordinates composing the section.
         '''
         is_ind = True if kwargs.get('is_ind') is None else kwargs.get('is_ind')
 
@@ -92,8 +138,20 @@ class shapeslice(object):
             return out
 
     def __PolygonSliceSurface(self, xx, yy, z, width, **kwargs):
-        """
+        """__PolygonSliceSurface(self, xx, yy, z, width, **kwargs) -> numpy.2darray
         Get the positions or indices of the profile of the cross section of polyhedron at position z.
+
+        Parameters
+        ----------
+        xx     : numpy.2darray
+        yy     : numpy.2darray
+        z      : float
+        width  : float
+        args   : options
+        kwargs : options
+            is_ind : bool
+                if True, then return the indices of the section.
+                if False, then return the coordinates composing the section.
         """
         is_ind = True if kwargs.get('is_ind') is None else kwargs.get('is_ind')
         ind_body = self.Slice(xx, yy, z)
@@ -115,18 +173,22 @@ class shapeslice(object):
             return out
 
     def EulerRot(self, *args, **kwargs):
-        """
+        """EulerRot(self, *args, **kwargs)
         Euler rotation.
-        This function is for override.
+        This function is an abstract function.
         """
         pass
 
     def UpdSlice(self, *args, **kwargs):
-        """
+        """EulerRot(self, *args, **kwargs)
         Update self.
-        This function is for override.
+        This function is an abstract function.
         """
         pass
 
     def shape_name(self, *args, **kwargs):
+        """shape_name(self, *args, **kwargs)
+        name of shape.
+        This function is an abstract function.
+        """
         pass

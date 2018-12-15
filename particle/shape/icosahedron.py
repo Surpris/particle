@@ -7,13 +7,8 @@ from ..core import mathfunctions as mf
 from .polyhedron import polyhedron, check_poly_validity
 
 class icosahedron(polyhedron):
-    '''
-    Icosahedron.
-
-    < Input parameters of __init__() >
-        a       : length of edge
-        kwargs  : options
-    '''
+    '''icosahedron class'''
+    
     _shape_name = 'icosahedron'
     n_vertices = 12
     n_edges = 30
@@ -21,8 +16,23 @@ class icosahedron(polyhedron):
     n_shapeinfo = n_vertices + n_edges + n_faces
 
     def __init__(self, a, *args, **kwargs):
-        """
-        Initialization
+        """__init__(self, a, *args, **kwargs) -> None
+        initialize this class.
+
+        Parameters
+        ----------
+        a      : float
+            length of edge
+        args   : options
+        kwargs : options
+            euler   : 3-element list or numpy.1darray
+                Euler angle for rotation
+            permute : 3-element list or numpy.1darray
+                direction for plotting
+            chamfer : float
+                degree of chamferring
+            rand    : bool
+                flag for random-depth chamferring
         """
 
         self.gamma = [62.1, 64.1, 67.3] # (111), (110), (100)
@@ -54,7 +64,10 @@ class icosahedron(polyhedron):
 
         self._kwargs = kwargs
 
-    def vertices(self, a):
+    def vertices(self):
+        """vertices(self) -> numpy.2darray
+        return the vertices.
+        """
         coef = 2
         phi = 2*np.cos(np.pi/5)
         vert = np.zeros((3, 12))
@@ -63,7 +76,10 @@ class icosahedron(polyhedron):
         vert[2, :] = a/coef*np.array([1,phi,1,phi,0,0,0,0,-1,-phi,-1,-phi])
         return vert
 
-    def midpoints(self, a):
+    def midpoints(self):
+        """midpoints(self) -> numpy.2darray
+        return the midpoints of edges.
+        """
         # Parameters.
         edges = 30
         out = np.zeros((3, edges))
@@ -138,7 +154,7 @@ class icosahedron(polyhedron):
         return out
 
     def info(self):
-        """
-        Get information to make one object by `particleshape`.
+        """info(self) -> dict
+        return the information of this class.
         """
         return dict(shape_name=self._shape_name, a=self.a, NN=self._NN, DD=self.DD, kwargs=self._kwargs)

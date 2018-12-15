@@ -9,9 +9,17 @@ from .wulffpolyhedron import wulffpolyhedron
 from .polyhedron import polyhedron
 
 def particleshape(**info):
-    """
-    Generate one object according to `info`.
-    `info` must have `shape_name`, `a`, and `kwargs`.
+    """particleshape(**info) -> (object)
+    generate one object according to `info`.
+
+    Parameters
+    ----------
+    info : dict
+        this parameter must have `shape_name`, `a`, and `kwargs`.
+
+    Returns
+    -------
+        an instance of some class in `shape` directory
     """
     shape_lower = info.get("shape_name")
     a = info.get("a")

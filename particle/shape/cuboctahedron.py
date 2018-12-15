@@ -6,13 +6,7 @@ from ..core import mathfunctions as mf
 from .polyhedron import polyhedron, check_poly_validity
 
 class cuboctahedron(polyhedron):
-    '''
-    Cuboctahedron.
-
-    < Input parameters of __init__() >
-        a       : length of edge
-        kwargs  : options
-    '''
+    '''cuboctahedron class'''
 
     _shape_name = 'cuboctahedron'
     n_vertices = 12
@@ -21,8 +15,27 @@ class cuboctahedron(polyhedron):
     n_shapeinfo = n_vertices + n_edges + n_faces
 
     def __init__(self, a, *args, **kwargs):
-        """
-        Initialization
+        """__init__(self, a, *args, **kwargs) -> None
+        initialize this class.
+
+        Parameters
+        ----------
+        a      : float
+            length of edge
+        args   : options
+        kwargs : options
+            center  : 3-element list or numpy.1darray
+                the center of a particle
+            density : float
+                the density of a particle
+            euler   : 3-element list or numpy.1darray
+                Euler angle for rotation
+            permute : 3-element list or numpy.1darray
+                direction for plotting
+            chamfer : float
+                degree of chamferring
+            rand    : bool
+                flag for random-depth chamferring
         """
 
         self.gamma = [62.1, 64.1, 67.3] # (111), (110), (100)
@@ -50,23 +63,23 @@ class cuboctahedron(polyhedron):
                             _NN, _DD, **kwargs)
         self._kwargs = kwargs
 
-    def vertices(self, a):
+    def vertices(self):
+        """vertices(self) -> numpy.2darray
+        return the vertices.
         """
-        Get vertices.
-        a   : edge length
-        """
+        a = self.a
         out = np.zeros((3, 12))
         out[0, :] = a/np.sqrt(2)*np.array([1,0,-1,0,1,-1,-1,1,1,0,-1,0])
         out[1, :] = a/np.sqrt(2)*np.array([0,1,0,-1,1,1,-1,-1,0,1,0,-1])
         out[2, :] = a/np.sqrt(2)*np.array([1,1,1,1,0,0,0,0,-1,-1,-1,-1])
         return out
 
-    def midpoints(self, a):
-        """
-        Get midpoints of edges.
-        a   : edge length
+    def midpoints(self):
+        """midpoints(self) -> numpy.2darray
+        return the midpoints of edges.
         """
         # Parameters.
+        a = self.a
         edges = 24
         out = np.zeros((3, edges))
 
@@ -125,4 +138,7 @@ class cuboctahedron(polyhedron):
         return out
 
     def info(self):
+        """info(self) -> dict
+        return the information of this class.
+        """
         return dict(shape_name=self._shape_name, a=self.a, NN=self._NN, DD=self.DD, kwargs=self._kwargs)

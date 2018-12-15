@@ -7,17 +7,39 @@ from ..core.space import space
 from .shapeslice import shapeslice
 
 class polyhedron(shapeslice):
-    """
-    Polyhedron class.
-    It has basic functions of each polyhedron.
+    """polyhedron class.
+    This class has basic functions of each polyhedron.
     Based on the list of the distance "DD" from the center defined as an arbitrary surface vector "NN",
-    we give the area enclosed by them.
-    The surface energy "GG" of the surface may be adjusted as required.
+    a region enclosed by them is given as the polyhedron.
+    The surface energy "GG" of the surface may be adjusted if required.
     """
     def __init__(self, a, NN, DD, *args, **kwargs):
-        """
-        Initialization
-        "DD" is supposd to be given by the ratios to "a".
+        """__init__(self, a, NN, DD, *args, **kwargs) -> None
+        initialize this class.
+
+        Parameters
+        ----------
+        a      : float
+            length of edge
+        NN     : list or numpy.2darray
+            normal vectors
+        DD     : list or numpy.2darray
+            discante from the center of a polyhedron.
+            "DD" is supposd to be given by the ratios to "a".
+        args   : options
+        kwargs : options
+            center : 3-element list or numpy.1darray
+                the center of a particle
+            density : float
+                the density of a particle
+            euler   : 3-element list or numpy.1darray
+                Euler angle for rotation
+            permute : 3-element list or numpy.1darray
+                direction for plotting
+            chamfer : float
+                degree of chamferring
+            rand    : bool
+                flag for random-depth chamferring
         """
         self._shape_name = "polyhedron" if kwargs.get("shape_name") is None else kwargs.get("shape_name")
         # Get information from kwargs
@@ -76,10 +98,10 @@ class polyhedron(shapeslice):
         if _chamfer_edge_rate is not None or _chamfer_vertex_rate is not None:
             if _chamfer_edge_rate is not None:
                 self.chamfer_edge_rate = _chamfer_edge_rate
-                self.chamfering("e", _chamfer_edge_rate)
+                self.chamferring("e", _chamfer_edge_rate)
             if _chamfer_vertex_rate is not None:
                 self.chamfer_vertex_rate = _chamfer_vertex_rate
-                self.chamfering("v", _chamfer_vertex_rate)
+                self.chamferring("v", _chamfer_vertex_rate)
         else:
             """ Old format """
             if kwargs.get('chamfer') is not None:
@@ -123,10 +145,21 @@ class polyhedron(shapeslice):
         self._kwargs = kwargs
 
     def EulerRot(self, euler):
+        """EulerRot(self, euler) -> None
+        Rotate this object according to the Euler angle `euler`.
+
+        Parameters
+        ----------
+        euler : 3-element list or numpy.1darray
+            Euler angle (alpha, beta, gamma)
+        """
         self.NN = mf.EulerRotation(self._NN, euler, 1)
         self.UpdSlice()
 
     def UpdSlice(self):
+        """UpdSlice(self) -> None
+        update this object.
+        """
         shapeslice.__init__(self, self._shape_name, self.a,
                             NN=self.NN, DD=self.DD, perm=self.perm, center=self.center, 
                             density=self.density)
@@ -134,28 +167,34 @@ class polyhedron(shapeslice):
     def shape_name(self):
         return self._shape_name + ""
 
-    def midpoints(self, a, *args, **kwargs):
-        """
-        Get the midpoints of each edge.
+    def midpoints(self, *args, **kwargs):
+        """midpoints(self, *args, **kwargs) -> None
+        get the midpoints of each edge.
         This function is an abstract function.
         Implementation is done with child classes that inherit this class.
         """
         return None
 
-    def vertices(self, a, *args, **kwargs):
-        """
-        Get vertices of polyhedron.
+    def vertices(self, *args, **kwargs):
+        """vertices(self, *args, **kwargs) -> None
+        get vertices of polyhedron.
         This function is an abstract function.
         Implementation is done with child classes that inherit this class.
         """
         return None
 
-    def chamfering(self, v_or_e, chamfer_rate):
-        """
-        Chamfer the edges and vertices.
-            v_or_e      : vertices ("v") or edges ("e")
-            chamfer_rate: depth of chamfering (numpy.ndarray / list).
-                Actual distance of the new facet(s) from the origin is given by `1.0 - chamfer_rate` times the original distance.
+    def chamferring(self, v_or_e, chamfer_rate):
+        """chamferring(self, v_or_e, chamfer_rate) -> None
+        chamfer the edges and vertices.
+
+        Parameters
+        ----------
+        v_or_e       : str
+            vertices ("v") or edges ("e")
+        chamfer_rate : numpy.1darray or list
+            depth of chamferring.
+            Actual distance of the new facet(s) from the origin is given by 
+            `1.0 - chamfer_rate` times the original distance.
         """
         if v_or_e == "v":
             _chamf = self.vertices(1.)
@@ -189,18 +228,20 @@ class polyhedron(shapeslice):
         self.GG = np.hstack((self.GG, np.array(_gg)))
 
     def info(self):
-        """
-        Get information to make one object by `particleshape`.
+        """info(self) -> dict
+        get information to make one object by `particleshape`.
         """
         return dict(shape_name=self._shape_name, a=self.a, NN=self._NN, DD=self.DD, kwargs=self._kwargs)
 
     def _check_poly_validity(self):
-        """
-        Check the validity of a given face.
-        <Determination condition on whether to construct a polyhedron>
-            A cube having a size three times larger than max (DD) is prepared,
-            If at least one of the points belonging to that side is inside at least one surface, it is out.
-            That is, it is OK if any side is outside of any side.
+        """_check_poly_validity(self) -> None
+        check the validity of a given face.
+        
+        Determination condition on whether to construct a polyhedron
+        ------------------------------------------------------------
+        A cube having a size three times larger than max (DD) is prepared.
+        If at least one of the points belonging to that side is inside at least one surface, it is out.
+        That is, it is OK if any side is outside of any side.
         """
         # Prepare the outer space.
         _xmax = max(self.DD)*3.
@@ -241,12 +282,27 @@ class polyhedron(shapeslice):
 
 """ --- Definition for standalone use with other functions --- """
 def check_poly_validity(NN, DD, center=[0., 0., 0.]):
-    """
-    Check the validity of a given face.
-    <Determination condition on whether to construct a polyhedron>
-        A cube having a size three times larger than max (DD) is prepared,
-        If at least one of the points belonging to that side is inside at least one surface, it is out.
-        That is, it is OK if any side is outside of any side.
+    """check_poly_validity(NN, DD, center=[0., 0., 0.]) -> bool
+    check the validity of a given face.
+    
+    Parameters
+    ----------
+    NN     : list or numpy.2darray
+            normal vectors
+    DD     : list or numpy.2darray
+        discante from the center of a polyhedron
+    center : list or numpy.1darray
+        the center of a polyhedron
+    
+    Returns
+    -------
+    True / False
+    
+    Determination condition on whether to construct a polyhedron
+    ------------------------------------------------------------
+    A cube having a size three times larger than max (DD) is prepared.
+    If at least one of the points belonging to that side is inside at least one surface, it is out.
+    That is, it is OK if any side is outside of any side.
     """
     # Prepare the outer space.
     _xmax = max(DD)*3.

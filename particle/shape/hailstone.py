@@ -1,20 +1,25 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
+import warnings
 
 from .. import core
 from ..core import mathfunctions as mf
 
 class hailstone_with_sphere(object):
-    '''
-    Hailstone.
+    '''hailstone class.
     The primary purpose of this class is to randomly generate a hail model
     with daughter particles centered on the surface of the mother particle.
+
+    Remarks
+    -------
+    This class is deprecated.
     '''
     def __init__(self, shape, *args, **kwargs):
+        '''__init__(self, a, *args, **kwargs) -> None
+        initialize this class.
         '''
-        Initialization
-        '''
+        warnings.warn("This class is deprecated. Please use `particle.ensemble_system`", DeprecationWarning)
         self.__shape_name = shape.shape_name()
         self.__shape = shape
         self.center = shape.center
@@ -175,6 +180,8 @@ class hailstone(object):
             *args: option
             **kwargs: option
         '''
+
+        warnings.warn("This class is deprecated. Please use `particle.ensemble_system`", DeprecationWarning)
         self._shape_name = "hailstone"
 
         self.__shape_mother = shape_mother

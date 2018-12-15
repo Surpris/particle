@@ -7,13 +7,7 @@ from ..core import mathfunctions as mf
 from .polyhedron import polyhedron, check_poly_validity
 
 class wulffpolyhedron(polyhedron):
-    '''
-    Wulff polyhedron.
-
-    < Input parameters of __init__() >
-        a       : length of edge
-        kwargs  : options
-    '''
+    '''wulff polyhedron class'''
 
     _shape_name = 'wulffpolyhedron'
     n_vertices = 0
@@ -32,8 +26,27 @@ class wulffpolyhedron(polyhedron):
     n_shapeinfo_111_100 = n_vertices_111_100 + n_edges_111_100 + n_faces_111_100
 
     def __init__(self, a, *args, **kwargs):
-        """
-        Initialization
+        """__init__(self, a, *args, **kwargs) -> None
+        initialize this class.
+
+        Parameters
+        ----------
+        a      : float
+            length of edge
+        args   : options
+        kwargs : options
+            center  : 3-element list or numpy.1darray
+                the center of a particle
+            density : float
+                the density of a particle
+            euler   : 3-element list or numpy.1darray
+                Euler angle for rotation
+            permute : 3-element list or numpy.1darray
+                direction for plotting
+            chamfer : float
+                degree of chamferring
+            rand    : bool
+                flag for random-depth chamferring
         """
 
         polytype = kwargs.get('polytype')
@@ -89,7 +102,12 @@ class wulffpolyhedron(polyhedron):
 
         self._kwargs = kwargs
 
-    def vertices(self, a, gamma=[62.1, 64.1, 67.3]):
+    def vertices(self):
+        """vertices(self) -> numpy.2darray
+        return the vertices.
+        """
+        a = self.a
+        gamma = self.gamma
         gamma_max = max(gamma)
 
         # Coefficient matices of first quadrant.
@@ -102,7 +120,7 @@ class wulffpolyhedron(polyhedron):
         CoefMat.append(np.array([[1,1,1],[0,1,1],[0,1,0]]))   # (111), (011), (010)
 
         # Determinant vector for (111), (110) and (100).
-        T = a/gamma_max*np.array([np.sqrt(3)*gamma[0],np.sqrt(2)*gamma[1],gamma[2]])
+        T = a / gamma_max * np.array([np.sqrt(3) * gamma[0], np.sqrt(2) * gamma[1], gamma[2]])
 
         # Calculation vertices in first quadrant.
         out1 = []
@@ -113,19 +131,21 @@ class wulffpolyhedron(polyhedron):
         out = np.zeros((3,48))
         for ii in range(6):
             out[:,ii] = np.array([out1[ii][0], out1[ii][1], out1[ii][2]])
-            out[:,ii+6] = mf.EulerRotation(np.array([out1[ii][0], out1[ii][1], out1[ii][2]]),[0,0,90],0); # yz-plane
-            out[:,ii+12] = mf.EulerRotation(np.array([out1[ii][0], out1[ii][1], out1[ii][2]]),[0,0,180],0);  # z-axis
-            out[:,ii+18] = mf.EulerRotation(np.array([out1[ii][0], out1[ii][1], out1[ii][2]]),[0,0,270],0);  # zx-plane
+            out[:,ii+6] = mf.EulerRotation(np.array([out1[ii][0], out1[ii][1], out1[ii][2]]),[0,0,90],0) # yz-plane
+            out[:,ii+12] = mf.EulerRotation(np.array([out1[ii][0], out1[ii][1], out1[ii][2]]),[0,0,180],0)  # z-axis
+            out[:,ii+18] = mf.EulerRotation(np.array([out1[ii][0], out1[ii][1], out1[ii][2]]),[0,0,270],0)  # zx-plane
             out[:,ii+24] = np.array([out1[ii][0], out1[ii][1], -out1[ii][2]])  # xy-plane
-            out[:,ii+30] = mf.EulerRotation(np.array([out1[ii][0], out1[ii][1], -out1[ii][2]]),[0,0,90],0);   # x-axis
-            out[:,ii+36] = mf.EulerRotation(np.array([out1[ii][0], out1[ii][1], -out1[ii][2]]),[0,0,180],0); # origin
-            out[:,ii+42] = mf.EulerRotation(np.array([out1[ii][0], out1[ii][1], -out1[ii][2]]),[0,0,270],0); # y-axis
+            out[:,ii+30] = mf.EulerRotation(np.array([out1[ii][0], out1[ii][1], -out1[ii][2]]),[0,0,90],0)   # x-axis
+            out[:,ii+36] = mf.EulerRotation(np.array([out1[ii][0], out1[ii][1], -out1[ii][2]]),[0,0,180],0) # origin
+            out[:,ii+42] = mf.EulerRotation(np.array([out1[ii][0], out1[ii][1], -out1[ii][2]]),[0,0,270],0) # y-axis
 
         return out
 
-
-    def midpoints(self, a, gamma=[62.1, 64.1, 67.3]):
-        vert = self.vertices(a, gamma)
+    def midpoints(self):
+        """midpoints(self) -> numpy.2darray
+        return the midpoints of edges.
+        """
+        vert = self.vertices()
 
         out1 = np.zeros((3,10))
         out1[:,0] = (vert[:,0]+vert[:,1])/2
@@ -151,18 +171,18 @@ class wulffpolyhedron(polyhedron):
             out[:,ii+56] = mf.EulerRotation(np.array([out1[0,ii], out1[1,ii], -out1[2,ii]]),[0,0,270],0) # y-axis
 
         out[:,64] = out1[:,8]
-        out[:,65] = mf.EulerRotation(out1[:,8],[0,0,90],0); # yz-plane
-        out[:,66] = mf.EulerRotation(out1[:,8],[0,0,180],0);  # z-axis
-        out[:,67] = mf.EulerRotation(out1[:,8],[0,0,270],0);  # zx-plane
+        out[:,65] = mf.EulerRotation(out1[:,8],[0,0,90],0) # yz-plane
+        out[:,66] = mf.EulerRotation(out1[:,8],[0,0,180],0)  # z-axis
+        out[:,67] = mf.EulerRotation(out1[:,8],[0,0,270],0)  # zx-plane
         out[:,68] = out1[:,9]
-        out[:,69] = mf.EulerRotation(out1[:,9],[0,0,90],0); # yz-plane
-        out[:,70] = mf.EulerRotation(out1[:,9],[0,0,180],0);  # z-axis
-        out[:,71] = mf.EulerRotation(out1[:,9],[0,0,270],0);  # zx-plane
+        out[:,69] = mf.EulerRotation(out1[:,9],[0,0,90],0) # yz-plane
+        out[:,70] = mf.EulerRotation(out1[:,9],[0,0,180],0)  # z-axis
+        out[:,71] = mf.EulerRotation(out1[:,9],[0,0,270],0)  # zx-plane
 
         return out
 
     def info(self):
-        """
-        Get information for generating one object by `particleshape`.
+        """info(self) -> dict
+        return the information of this class.
         """
         return dict(shape_name=self._shape_name, a=self.a, NN=self._NN, DD=self.DD, kwargs=self._kwargs)
