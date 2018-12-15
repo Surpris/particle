@@ -114,7 +114,8 @@ class polyhedron(shapeslice):
         # Initialize shapeslice class.
         self.NN = self._NN.copy()
         shapeslice.__init__(self, self._shape_name, self.a,
-                            NN=self.NN, DD=self.DD, perm=self.perm, center=self.center)
+                            NN=self.NN, DD=self.DD, perm=self.perm, center=self.center, 
+                            density=kwargs.get("density"))
 
         # Euler rotation.
         self.EulerRot(euler)
@@ -127,7 +128,8 @@ class polyhedron(shapeslice):
 
     def UpdSlice(self):
         shapeslice.__init__(self, self._shape_name, self.a,
-                            NN=self.NN, DD=self.DD, perm=self.perm, center=self.center)
+                            NN=self.NN, DD=self.DD, perm=self.perm, center=self.center, 
+                            density=self.density)
 
     def shape_name(self):
         return self._shape_name + ""

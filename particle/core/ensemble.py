@@ -21,21 +21,35 @@ class ensemble_system(slicefft):
     __doc__ = ''' Class which deal with an ensemble of particles.
     Both `kwargs` for `slicefft` and `ensemble` are necessary for initialization.
 
-    < kwargs for slicefft >
-        kw_slicefft : dict object including the following arguments.
-            N           : # of points in x-axis direction
-            xmax        : spatial size in x-axis direction
-            kwargs      : option (dict object). See `space` and `slicefft` classes.
+    kwargs for slicefft
+    -------------------
+    kw_slicefft : dict object including the following arguments.
+        N      : int
+            # of points in x-axis direction
+        xmax   : float
+            spatial size in x-axis direction
+        kwargs : dict
+            option (dict object). See `space` and `slicefft` classes.
 
-    < kwargs for ensemble >
-        kw_shapes   : dict object or list of dict objests including the following arguments.
-            shape_name  : name of shape
-            a           : characteristic length of the shape
-            kwargs      : option (dict object). See the classes in `shape` directory.
-
-    < Example of using ensemble_system >
-    #--- Start of example ---
+    kwargs for ensemble
+    -------------------
+    kw_shapes   : dict object or list of dict objests including the following arguments.
+        shape_name : str
+            name of shape
+        a          : float
+            characteristic length of the shape
+        kwargs     : dict
+            option (dict object). See the classes in `shape` directory.
     
+    Other parameters
+    ----------------
+    kwargs : option
+        weighting_density : bool
+            if True, then each index of space where particles exist
+            is weighned and overwritten by following the order of particles in kw_shapes
+
+    Example of using ensemble_system
+    --------------------------------
     import numpy as np
     import sys
     from particle import ensemble_system
@@ -82,24 +96,26 @@ class ensemble_system(slicefft):
             if len(args) == 1: # file path or a dict object which self.save() outputs
                 if type(args[0]) == str:
                     with open(args[0], "rb") as ff:
-                        kwargs = pickle.load(ff)
+                        kwargs_ = pickle.load(ff)
                 elif type(args[0]) == dict:
-                    kwargs = args[0]
+                    kwargs_ = args[0]
         elif len(args) == 2:
             if type(args[0]) == str:
                 with open(args[0], "rb") as f:
-                    kwargs = pickle.load(f)
+                    kwargs_ = pickle.load(f)
             elif type(args[0]) == dict:
-                kwargs = dict(kw_slicefft=args[0], kw_shapes=args[1])
+                kwargs_ = dict(kw_slicefft=args[0], kw_shapes=args[1])
         else: # if len(args) > 3 then raise Exception
             raise Exception('Failure.')
+        
+        weighting_density = kwargs.get("weighting_density")
 
         # Separate parameters
-        kw_slicefft = kwargs.get("kw_slicefft")
+        kw_slicefft = kwargs_.get("kw_slicefft")
         if kw_slicefft is None or type(kw_slicefft) != dict:
             raise ValueError("Invalid value for `kw_slicefft`.")
 
-        kw_shapes = kwargs.get("kw_shapes")
+        kw_shapes = kwargs_.get("kw_shapes")
         if kw_shapes is None:
             raise KeyError("kw_shapes")
 
@@ -113,7 +129,7 @@ class ensemble_system(slicefft):
         self.__InitCoorInfo()
 
         # Generate an ensemble according to the input arguments
-        self._shape = ensemble(kw_shapes)
+        self._shape = ensemble(kw_shapes, weighting=weighting_density)
         self._kwargs = copy.deepcopy(kwargs)
 
     def __InitCoorInfo(self):
@@ -243,18 +259,31 @@ class ensemble(object):
     """
 
     _shape_name = "ensemble"
-    def __init__(self, shapes, *args, **kwargs):
+    def __init__(self, shapes, weighting=None, *args, **kwargs):
         ''' Initialization 
-            < Input parameters >
-                shapes           : kwargs or list of kwargs of information on particles
-                *args            : option
-                **kwargs         : option
+        
+        Parameters
+        ----------
+        shapes : kwargs or list of kwargs
+            information on particles
+        weighting : bool
+            True = weighting with particles' densities
+        args : option
+        kwargs : option
         '''
         # Keep kwargs of each particle
         if type(shapes) != list:
             self._shapes_kwarg = [shapes]
         else:
             self._shapes_kwarg = shapes
+        
+        # Set weighting mode
+        if weighting is None:
+            self._weighting = False
+        elif not isinstance(weighting, bool):
+            raise TypeError("'weighting' must be boolean.")
+        else:
+            self._weighting = weighting
 
         # Calculate the number of particles
         self._n_shapes = len(self._shapes_kwarg)
@@ -283,7 +312,7 @@ class ensemble(object):
             self.a_range = max([self.a_range, _d + _a_range])
 
         # THe center of ensemble is always the center of space
-        self.center = [0., 0., 0.,]
+        self.center = [0., 0., 0.]
 
     def info(self):
         kw_list = [None] * self._n_shapes
@@ -319,12 +348,15 @@ class ensemble(object):
 
     def Slice(self, xx, yy, z, *args, **kwargs):
         """ Return the cross-section of the ensemble.
-            < Input parameters >
-                xx, yy  : 2D coordinates (N*M arrays)
-                z       : z coordinate
-                *args   : Option
-                **kwargs: Option
+        < Input parameters >
+            xx, yy  : 2D coordinates (N*M arrays)
+            z       : z coordinate
+            *args   : Option
+            **kwargs: Option
         """
+        # if `is_ind` == True then return the indices
+        is_ind = True if kwargs.get('is_ind') is None else kwargs.get('is_ind')
+
         # Calculate the slices of each particle
         ind_hit = np.where(abs(z - self._centers[:,2]) <= self._as_range)[0]
         if len(ind_hit) <= 0:
@@ -334,12 +366,18 @@ class ensemble(object):
             for jj in ind_hit:
                 if ind is None:
                     ind = self._shapes[jj].Slice(xx, yy, z)
+                    if is_ind is True and self._weighting is True:
+                        density_ = 1.0 if self._shapes[jj].density is None else self._shapes[jj].density
+                        ind = ind * density_
                 else:
                     ind2 = self._shapes[jj].Slice(xx, yy, z)
-                    ind |= ind2
+                    if is_ind is True and self._weighting is True:
+                        density_ = 1.0 if self._shapes[jj].density is None else self._shapes[jj].density
+                        ind[ind2] = density_
+                    else:
+                        ind |= ind2
+                # print(ind.sum())
 
-        # if `is_ind` == True then return the indices
-        is_ind = True if kwargs.get('is_ind') is None else kwargs.get('is_ind')
         if is_ind is True:
             return ind
         else:

@@ -28,6 +28,7 @@ class shapeslice(object):
             self.SliceSurface = self.__PolygonSliceSurface
 
         self.center = [0., 0., 0.] if kwargs.get('center') is None else kwargs.get('center')
+        self.density = 1.0 if kwargs.get("density") is None else kwargs.get("density")
 
     def __SpheroidSlice(self, xx, yy, z, *args, **kwargs):
         '''

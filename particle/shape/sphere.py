@@ -8,4 +8,5 @@ class sphere(spheroid):
     '''
     def __init__(self, a, **kwargs):
         center = kwargs.get('center')
-        spheroid.__init__(self, a, center=center)
+        density = kwargs.get("density")
+        spheroid.__init__(self, a, center=center, density=density)

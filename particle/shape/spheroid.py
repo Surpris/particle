@@ -18,7 +18,7 @@ class spheroid(shapeslice):
         self.a = max(self.ax, self.ay, self.az)
         self.a_range = self.a*1.1
         shapeslice.__init__(self, self._shape_name, self.ax, self.ay, self.az,
-                            center=self.center)
+                            center=self.center, density=kwargs.get("density"))
         self._kwargs = kwargs
 
     def shape_name(self):
@@ -29,7 +29,7 @@ class spheroid(shapeslice):
         Get information to make one object by `particleshape`.
         """
         if self._shape_name == 'sphere':
-            _kwargs = dict(a_range=self.a_range, center=self.center)
+            _kwargs = dict(a_range=self.a_range, center=self.center, original_kwargs=self._kwargs)
         else:
-            _kwargs = dict(a_range=self.a_range, center=self.center, ay=self.ay, az=self.az)
+            _kwargs = dict(a_range=self.a_range, center=self.center, ay=self.ay, az=self.az, original_kwargs=self._kwargs)
         return dict(shape_name=self._shape_name, a=self.ax, kwargs=_kwargs)
