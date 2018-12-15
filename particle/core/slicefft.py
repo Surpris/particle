@@ -396,7 +396,7 @@ class slicefft(space):
         rangex = self._rmax[0,:]*self._xscale
         rangey = self._rmax[1,:]*self._yscale
         buff = np.abs(self._rho0)
-        plt.imshow(buff, extent=[rangex[0], rangex[1], rangey[0], rangey[1]])
+        plt.imshow(buff, origin="normal", extent=[rangex[0], rangex[1], rangey[0], rangey[1]])
         if self._xlim is not None: plt.xlim(self._xlim[0], self._xlim[1])
         if self._ylim is not None: plt.ylim(self._ylim[0], self._ylim[1])
         plt.clim(0, np.max(buff)*self._rcscale)
@@ -409,7 +409,7 @@ class slicefft(space):
         rangeqx = self._qmax[0,:]*self._qxscale
         rangeqy = self._qmax[1,:]*self._qyscale
 
-        plt.imshow(np.abs(self._F),
+        plt.imshow(np.abs(self._F), origin="normal",
                    extent=[rangeqx[0], rangeqx[1], rangeqy[0], rangeqy[1]])
         if self._qxlim is not None: plt.xlim(self._qxlim[0], self._qxlim[1])
         if self._qylim is not None: plt.ylim(self._qylim[0], self._qylim[1])
