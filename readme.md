@@ -2,7 +2,6 @@ particle module
 =====
 
 This module aims to calculate scattered images from a given shape by using the Multi-slice Fourier transform (MSFT) method.   
-**There are still some comments in Japanese in files.**   
 
 # Requirement
 This module has dependencies on the following modules.
@@ -33,9 +32,13 @@ Currently, installing this module requires the following steps:
 ```
 /particle
     /core: Core modules.
-        particle.py : Class for one-particle system.
-        ensemble.py : Class for multi-particle system.
+        ensemble.py     : Class for multi-particle system.
+        mathfuntions.py : functions related to calculation.
+        particle.py     : Class for one-particle system. (**deprecated from v1.2**)
+        slicefft.py     : Class for MSFT.
+        space.py        : Class for meshgrids in space.
     /shape: Shape classes. Refer to the section "Shapes".
+        shapeslice.py   : functions related to slicing.
 ```
 
 # Shapes
@@ -43,17 +46,25 @@ The following shapes are available:
 
 * cube
 * cuboctahedron
-* hailstone / hailstone_with_sphere
+* dodecahedron (under construction)
+* hailstone / hailstone_with_sphere (**deprecated from 1.2**)
   + The primary purpose of `hailstone_with_sphere` is to randomly generate a hail model with daughter particles centered on the surface of the mother particle.
   + `hailstone` generates a hail model using arguments (list of) of information on types, sizes and positions of a mother particle and daughter particles.
 * icosahedron
+* polyhedron
 * sphere
 * spheroid
 * wulffpolyhedron
 
 ## How to add a shape class
-1. Add a description of the required shape (`myshape`) to the` / shape` directory with reference to other classes.
-2. Add the following two sentences to `__init __. Py` in` / shape` directory.
+1. Add a description of the required shape (`myshape`) to the `/shape` directory with reference to other classes.
+2. Add the following two sentences to `__init __. Py` in the `/shape` directory.
   * `from . import myshape`
   * `from .myshape import *`
 3. Add an `elif` statement to the` particle .__ MakeParticle` function so that it can be called from the `particle` class.
+
+## History of update
+* 1.0 : first commission
+* 1.0.1 : fix bugs
+* 1.0.2 : fix bugs
+* 1.1 : update documentation, add density-weighting mode

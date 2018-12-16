@@ -14,7 +14,6 @@ from mpl_toolkits.mplot3d import Axes3D
 # User modules
 # from . import core
 from . import mathfunctions as mf
-from . import folderfunctions as ff
 # from . import slicefft
 from .slicefft import slicefft
 # from . import shape
@@ -126,7 +125,7 @@ class particle(slicefft):
         else:
             self.__savefldrpath = savefldr
         try:
-            ff.makefolders(self.__savefldrpath)
+            os.makedirs(self.__savefldrpath)
         except Exception as e:
             pass
             # print(e)
@@ -169,7 +168,7 @@ class particle(slicefft):
         elif nameonly is False:
             ind = filepath.index('/')
             _fldrpath = filepath[:ind + 1]
-            ff.makefolders(_fldrpath)
+            os.makedirs(_fldrpath)
             _filepath = filepath
         else:
             _filepath = self.__savefldrpath + filepath

@@ -5,8 +5,7 @@ import numpy as np
 from numpy.fft import *
 from matplotlib import pyplot as plt
 import importlib
-# import sys
-# sys.path.append("./")
+import warnings
 
 # Use modules
 from .space import space
@@ -35,6 +34,15 @@ else:
     found_cufft = False
 
 def funcfftw(F, *args, **kwargs):
+    """funcfftw(F, *args, **kwargs) -> numpy.2darray
+    apply 2D Fourier transform
+
+    Parameters
+    ----------
+    F      : numpy.2darray
+    args   : options
+    kwargs : options
+    """
     if found is True and kwargs.get('fft_type') == 'fftw':
         pyfftw.forget_wisdom()
         func = pyfftw.builders.fft2(F, overwrite_input=True, planner_effort='FFTW_ESTIMATE', threads=multiprocessing.cpu_count())
@@ -48,6 +56,15 @@ def funcfftw(F, *args, **kwargs):
         return fft2(F)
 
 def ifuncfftw(F, *args, **kwargs):
+    """ifuncfftw(F, *args, **kwargs) -> numpy.2darray
+    apply 2D inverse Fourier transform
+
+    Parameters
+    ----------
+    F      : numpy.2darray
+    args   : options
+    kwargs : options
+    """
     if found_cufft is True and kwargs.get('fft_type') == 'cufft':
         x_gpu = gpuarray.to_gpu(F.astype(np.complex64))
         xf_gpu = gpuarray.empty(F.shape, np.complex64)
@@ -61,25 +78,36 @@ def ifuncfftw(F, *args, **kwargs):
         return ifft2(F)
 
 class slicefft(space):
-    '''
-    X線領域でのMulti-Slice Fourier Transform (MSFT) を計算するクラス。
-    多重散乱を考慮しない。
-    Thomson scatteringを仮定。Valence electronもすべてfree (conduction) electronとみなしている。
-    2016/09/13 (Tue.) 現在、屈折率を与える形でターゲットによる光の吸収効果を導入。
+    '''slice fft class
+    This class is to apply Multi-Slice Fourier Transform (MSFT) in the x-ray regime.
+    In principle multiple scattering is not considered in this regime,
+    and scattering from an electron is assumed to be Thomson scattering.
+    Valence electrons are also regarded as free (conduction) electrons.
 
-    主な使い方は、初期化して"MSFT"関数を実行することである。
-
-    実装している関数はつぎのようになっている。
-        < 内部利用 >
-        __init__ : 初期化
-
+    This class has basic functions for MSFT, and supposed to be inherited by one's class.
     '''
     def __init__(self, Nx, xmax, **kwargs):
-        """
-            クラスの初期化。
-            引数について、
-                Nx, xmax : spaceの初期化で利用。
-                kwargs   : speceとslicefftの初期化で利用。
+        """__init__(self, Nx, xmax, **kwargs) -> None
+        initialize this class.
+
+        Parameters
+        ----------
+        Nx     : int
+            the number of grid points
+        xmax   : float
+            the maximum of space in the x direction.
+            The spatial resolution is defined as 2*xmax/Nx.
+        kwargs : options
+            fft_type : str (default : 'numpy')
+                'numpy' : use fft methods in the numpy module
+                'fftw'  : use fft methods in the pyfftw module if supported
+                'cufft' : use fft methods in the cufft module if supported
+            others : See the following classes or methods.
+                space class
+                InitPhoton()
+                InitMSFT()
+                InitAxes()
+                InitDensity()
         """
         space.__init__(self, Nx, xmax, **kwargs)
         self.InitPhoton(**kwargs)
@@ -87,35 +115,43 @@ class slicefft(space):
         self.InitAxes(**kwargs)
         self.InitDensity(**kwargs)
 
-        """
-            fft_type の有効性のチェック。
-            cufft、fftw、numpyの順に優先する。
-        """
+        # Check the validity of `fft_type`
         if kwargs.get('fft_type') is None:
-            self.__fft_type = 'cufft' # とりあえずcufftを最優先
+            self.__fft_type = 'cufft'
         elif kwargs.get('fft_type') not in ['numpy', 'fftw', 'cufft']:
             raise ValueError('Invalid value for the keyword "fft_type."')
         else:
             self.__fft_type = kwargs.get('fft_type')
 
-        # cufftの有効性のチェック
+        # Check the validity of cufft
         if self.__fft_type == 'cufft':
-            if found_cufft is True: # cudaがある場合
+            if found_cufft is True: # in case of the existence of CUDA
                 buff = self.mesh_space()[0].shape
                 self.__x_gpu = gpuarray.empty(buff, np.complex64)
                 self.__xf_gpu = gpuarray.empty(buff, np.complex64)
                 self.__plan = cu_fft.Plan(buff, np.complex64, np.complex64)
-            else: # cufftがない場合はfftwに切り替える
+            else: # change into fftw
                 self.__fft_type = 'fftw'
 
-        # fftwの有効性のチェック
+        # Check the validity of fftw
         if self.__fft_type == 'fftw':
-            if found is False: # fftwがない場合はnumpyに切り替える。
+            if found is False: # change into numpy
                 self.__fft_type = 'numpy'
 
     def InitMSFT(self, **kwargs):
-        """
-            MSFT関連の初期化。
+        """InitMSFT(self, **kwargs) -> None
+        initialize the members related to MSFT process
+
+        Parameters in kwargs
+        --------------------
+        rho0      : numpy.2darray
+        F         : numpy.2darray
+        coor_type : str
+        kmax      : float
+        rrmax     : float
+        rmax      : float
+        qmax      : float
+        qmode     : bool
         """
         self._rho0 = None if kwargs.get('rho0') is None else kwargs.get('rho0')
         self._F = None if kwargs.get('F') is None else kwargs.get('F')
@@ -131,8 +167,21 @@ class slicefft(space):
         self._shape = None
 
     def InitAxes(self, **kwargs):
-        """
-            プロット用に軸関連の初期化。
+        """InitAxes(self, **kwargs) -> None
+        initialize the axes of figures to plot
+
+        Parameters in kwargs
+        --------------------
+        xlim    : 2-element list
+        ylim    : 2-element list
+        rcscale : float
+        xscale  : float
+        yscale  : float
+        qxlim   : float
+        qylim   : float
+        qcscale : float
+        qxscale : float
+        qyscale : float
         """
         self._xlim = None if kwargs.get('xlim') is not None else kwargs.get('xlim')
         self._ylim = None if kwargs.get('ylim') is not None else kwargs.get('ylim')
@@ -147,26 +196,38 @@ class slicefft(space):
         self._qyscale = 1. if kwargs.get('qyscale') is None else kwargs.get('qyscale')
 
     def InitPhoton(self, **kwargs):
-        """
-            入射光関連の初期化。
+        """InitPhoton(self, **kwargs) -> None
+        initialize the incident beam
+
+        Parameters in kwargs
+        --------------------
+        wavelength : float
+        photons    : float
         """
         self._lambda = 2.2e-1 if kwargs.get('wavelength') is None else kwargs.get('wavelength')
         self._k = 2*np.pi/self._lambda
         self._photons = 1e10 if kwargs.get('photons') is None else kwargs.get('photons')
 
     def InitDensity(self, **kwargs):
-        """
-            self._shape(Particleクラスを想定)の密度に関する情報の初期化。
-            とりあえず屈折率の情報さえあればよいとする。
-            屈折率の定義は n = 1 - delta - 1j*beta.
-            もしbetaがマイナスの場合は符号を逆転させる。
+        """InitDensity(self, **kwargs) -> None
+        initialize the information on density.
+        Currently, only the refractive index is necessary.
+
+        Parameters in kwargs
+        --------------------
+        refr : complex or float
+            refractive index 'n'. 
+            In the x-ray regime, n = 1 - delta - 1j*beta.
         """
         self._refr = 1. if kwargs.get("refr") is None else kwargs.get("refr")
         if np.imag(self._refr) > 0.:
             self._refr = np.real(self._refr) - np.imag(self._refr)
-        self._phase_factor = -1j*(self._refr-1.)*self._k*self.dx()[2] # 直接かかわるのはdeltaとbeta
+        self._phase_factor = -1j*(self._refr-1.)*self._k*self.dx()[2]
 
     def fftInfo(self):
+        """fftInfo(self) -> dict
+        return the information on FFT calculation
+        """
         _fftInfo = dict(rho0=self._rho0, F=self._F, coor_type=self._coor_type,
                        kmax=self.kmax, rrmax=self._rrmax, rmax=self._rmax,
                        qmax=self._qmax, qmode=self._qmode,
@@ -178,20 +239,26 @@ class slicefft(space):
         return _fftInfo
 
     def SetParticle(self, shape):
+        """SetParticle(self, shape) -> None
+        set the particle
         """
-            Particleの設定。
-            近い将来、この設定関数は削除する。
-        """
+        warnings.warn("This method is deprecated.", DeprecationWarning)
         self._shape = shape
 
     def SetFFT(self):
         pass
 
     def __fft(self, F):
-        """
-            2D Forward Fourier Transformを実行する関数。
-            引数について、
-                F   : 被FFTデータ
+        """__fft(self, F) -> numpy.2darray
+        apply 2D Fourier transform
+
+        Parameters
+        ----------
+        F : numpy.2darray
+
+        Returns
+        -------
+        numpy.2darray
         """
         if self.__fft_type not in ['numpy', 'fftw', 'cufft']:
             raise ValueError('Invalid parameter for the keyword "fft_type."')
@@ -208,10 +275,16 @@ class slicefft(space):
             return fft2(F)
 
     def __ifft(self, F):
-        """
-            2D Inverse Fourier Transformを実行する関数。
-            引数について、
-                F   : 被IFFTデータ
+        """__ifft(self, F) -> numpy.2darray
+        apply 2D inverse Fourier transform
+
+        Parameters
+        ----------
+        F : numpy.2darray
+
+        Returns
+        -------
+        numpy.2darray
         """
         if self.__fft_type not in ['numpy', 'fftw', 'cufft']:
             raise ValueError('Invalid parameter for the keyword "fft_type."')
@@ -221,13 +294,26 @@ class slicefft(space):
             return ifunc()
         elif found_cufft is True and self.__fft_type == 'cufft':
             self.__x_gpu.set(F.astype(np.complex64))
-            # xf_gpu = gpuarray.empty(F.shape, np.complex64)
             cu_fft.ifft(self.__x_gpu, self.__xf_gpu, self.__plan, True)
             return self.__xf_gpu.get()
         else:
             return ifft2(F)
 
     def MSFT(self, coor_type='body', **kwargs):
+        """MSFT(self, coor_type='body', **kwargs) -> None
+        apply MSFT
+
+        Parameters
+        ----------
+        coor_type : str (default : 'body')
+        kwargs    : options
+            qmode    : bool
+            atte     : bool
+            is_trunc : bool
+            kmax     : float
+            is_rho   : bool
+
+        """
         if self._shape is None:
             raise ValueError("No information on the shape.")
 
@@ -282,7 +368,7 @@ class slicefft(space):
         self._F = np.zeros((_qzz.shape[0], _qzz.shape[1]), dtype = complex)
         self.__calc_count = 0
         if is_rho is True:
-            for ii, zz in enumerate(_sprange_z):
+            for zz in _sprange_z:
                 rho1 = _slice(_xx, _yy, zz, self._dx, is_trunc=self._is_trunc)
                 if sum(sum(rho1)) == 0:
                     continue
@@ -294,7 +380,7 @@ class slicefft(space):
             self.rho0 = rho0
         else:
             if _qmode is True:
-                for ii, zz in enumerate(_sprange_z):
+                for zz in _sprange_z:
                     rho1 = _slice(_xx, _yy, zz, self._dx, is_trunc=self._is_trunc)
                     if sum(sum(rho1)) == 0:
                         continue
@@ -307,13 +393,12 @@ class slicefft(space):
                     self._F += F1*np.exp(-1j*zz*_qzz)
                     rho0[_ind_x.min():_ind_x.max()+1, _ind_y.min():_ind_y.max()+1] = 0
                     self.__calc_count += 1
-                # rho0[_ind_x.min():_ind_x.max()+1, _ind_y.min():_ind_y.max()+1] = self._rho0
                 self.rho0 = rho0
             else:
                 if _atte is True:
                     self._rho0 = np.zeros((_xx.shape[0], _xx.shape[1]), dtype = complex)
                     rho0 = np.zeros((len(_sprange_x), len(_sprange_y)), dtype=complex)
-                for ii, zz in enumerate(_sprange_z):
+                for zz in _sprange_z:
                     rho1 = _slice(_xx, _yy, zz, self._dx, is_trunc=self._is_trunc)
                     if sum(sum(rho1)) == 0:
                         continue
@@ -322,22 +407,25 @@ class slicefft(space):
                     self._rho0 += rho1
                     self.__calc_count += 1
                 rho0[_ind_x.min():_ind_x.max()+1, _ind_y.min():_ind_y.max()+1] = self._rho0
-                # F = fftshift(fft2(rho0))
                 F = fftshift(self.__fft(rho0))[_ind_qx.min():_ind_qx.max()+1,
                                                _ind_qx.min():_ind_qx.max()+1]
                 self._F += F
                 self.rho0 = np.abs(rho0)
 
     def calc_count(self):
-        """
-            MSFTでの計算回数を取得する。
+        """calc_count(self) -> int
+        return the number of calculations of MSFT
         """
         return self.__calc_count
 
     def MakeMaskRegion(self, crop=False):
-        """
-            kmaxの範囲内の円形マスクを生成。
-            crop: kmaxで切った配列を返すかどうか
+        """MakeMaskRegion(self, crop=False) -> numpy.2darray
+        return a mask in the frequency space
+        
+        Parameters
+        ----------
+        crop : bool (default : False)
+            if True, then return a circular mask with the radius 'kmax'
         """
         if crop is True:
             _qrr = self.mesh_anglefreq(self.kmax, self.kmax, True)
@@ -346,9 +434,8 @@ class slicefft(space):
         return _qrr <= self.kmax
 
     def qindex(self):
-        """
-            もとのイメージ配列内で、実際に和をとる領域のインデックスを返す。
-            計算時にはkmaxの範囲内で和をとるようにしており、その領域が元の配列のどの場所に位置するかを与えるものである。
+        """qindex(self) -> list, list, list
+        return indice where calculation proceeds
         """
         _qx, _qy, _qz = self.range_anglefreq()
         _ind_qx = np.where(abs(_qx) <= self.kmax)[0]
@@ -357,27 +444,75 @@ class slicefft(space):
         return [_ind_qx.min(), _ind_qx.max()+1], [_ind_qy.min(), _ind_qy.max()+1], [_ind_qz.min(), _ind_qz.max()+1]
 
     def SetRho(self, rho0):
+        """SetRho(self, rho0) -> None
+        set the denisty map
+        """
         self._rho0 = rho0
 
     def SetF(self, F):
+        """SetF(self, F) -> None
+        set the Fourier modulus
+        """
         self._F = F
 
     def SetRhoF(self, rho0, F):
+        """SetRhoF(self, rho0, F) -> None
+        set the denisty map and the Fourier modulus
+        """
         self._rho0 = rho0
         self._F = F
 
     def GetRho(self, full=False):
-        if full is False: return 1.*self._rho0
-        else: return 1.*self.rho0
+        """GetRho(self, full=False) -> numpy.2darray
+        return the density map
+
+        Parameters
+        ----------
+        full : bool (default : False)
+            if True, then return the full region.
+            if False, then return the region around the existence of the density map.
+        """
+        if full is False:
+            return self._rho0.copy()
+        else: 
+            return self.rho0.copy()
 
     def GetF(self, shift=True):
-        if shift is True: return 1.*self._F
-        else: return 1.*fftshift(self._F)
+        """GetF(self, shift=True) -> numpy.2darray
+        return the Fourier modulus
+
+        Parameters
+        ----------
+        shift : bool (default : True)
+            if True, then return the modulus after application of fftshift.
+            if False, then return the raw modulus.
+        """
+        if shift is True: 
+            return self._F.copy()
+        else: 
+            return fftshift(self._F)
 
     def GetRhoF(self, shift=True):
-        return self._rho0, self.GetF(shift)
+        """GetRhoF(self, shift=True) -> numpy.2darray, numpy.2darray
+        return the density map and the Fourier modulus
+
+        Parameters
+        ----------
+        shift : bool (default : True)
+            if True, then return the modulus after application of fftshift.
+            if False, then return the raw modulus.
+        """
+        return self._rho0.copy(), self.GetF(shift)
 
     def PlotRhoF(self, **kwargs):
+        """PlotRhoF(self, **kwargs) -> None
+        plot the density map and the Fourier amplitude
+
+        Parameters
+        ----------
+        kwargs : options
+            See the documentation of 'InitAxes()'.
+        """
         plt.figure(100, figsize=(12, 5), dpi=100)
         plt.subplot(1,2,1)
         self.PlotRho(**kwargs)
@@ -385,6 +520,14 @@ class slicefft(space):
         self.PlotF(**kwargs)
 
     def PlotRhoI(self, **kwargs):
+        """PlotRhoI(self, **kwargs) -> None
+        plot the density map and the Fourier intensity
+
+        Parameters
+        ----------
+        kwargs : options
+            See the documentation of 'InitAxes()'.
+        """
         plt.figure(100, figsize=(12, 5), dpi=100)
         plt.subplot(1,2,1)
         self.PlotRho(**kwargs)
@@ -392,6 +535,14 @@ class slicefft(space):
         self.PlotI(**kwargs)
 
     def PlotRho(self, **kwargs):
+        """PlotRho(self, **kwargs) -> None
+        plot the density map
+
+        Parameters
+        ----------
+        kwargs : options
+            See the documentation of 'InitAxes()'
+        """
         self.InitAxes(**kwargs)
         rangex = self._rmax[0,:]*self._xscale
         rangey = self._rmax[1,:]*self._yscale
@@ -405,6 +556,14 @@ class slicefft(space):
         plt.title('Projection of density map', fontsize=15)
 
     def PlotF(self, **kwargs):
+        """PlotF(self, **kwargs) -> None
+        plot the Fourier amplitude
+
+        Parameters
+        ----------
+        kwargs : options
+            See the documentation of 'InitAxes()'
+        """
         self.InitAxes(**kwargs)
         rangeqx = self._qmax[0,:]*self._qxscale
         rangeqy = self._qmax[1,:]*self._qyscale
@@ -419,6 +578,14 @@ class slicefft(space):
         plt.title('FFT image by MSFT', fontsize=15)
 
     def PlotI(self, **kwargs):
+        """PlotI(self, **kwargs) -> None
+        plot the Fourier intensity
+
+        Parameters
+        ----------
+        kwargs : options
+            See the documentation of 'InitAxes()'
+        """
         self.InitAxes(**kwargs)
         rangeqx = self._qmax[0,:]*self._qxscale
         rangeqy = self._qmax[1,:]*self._qyscale

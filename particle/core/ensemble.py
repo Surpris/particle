@@ -13,7 +13,6 @@ from mpl_toolkits.mplot3d import Axes3D
 
 # User modules
 from . import mathfunctions as mf
-from . import folderfunctions as ff
 from .slicefft import slicefft
 from ..shape import *
 
@@ -80,18 +79,30 @@ class ensemble_system(slicefft):
     # plt.savefig("../images/image.png", bbox_inches="tight", pad_inches=0.1)
     print("Elapsed time: {0:.2f} sec.".format(time.time()-st))
     # Save the model
-    ens1.save("../data/data.ens")]
+    ens1.save("../data/data.ens")
 
     #--- End of example ---
     '''
 
     def doc():
-        """ Print the documentation of this class """
+        """ doc() -> str
+        print the documentation of this class
+        """
         for line in ensemble_system.__doc__.split("\n"):
             print(line)
 
     def __init__(self, *args, **kwargs):
-        """ Initialization """
+        """__init__(self, *args, **kwargs) -> None
+        initialize this class.
+
+        Parameters
+        ----------
+        args   : options
+        kwargs : options
+
+        Examples of the way to initialize this class
+        --------------------------------------------
+        """
         if len(args) <= 1: # if 0 then kwargs is used
             if len(args) == 1: # file path or a dict object which self.save() outputs
                 if type(args[0]) == str:
@@ -133,14 +144,23 @@ class ensemble_system(slicefft):
         self._kwargs = copy.deepcopy(kwargs)
 
     def __InitCoorInfo(self):
-        """ Initialize attributes for coordinates """
+        """__InitCoorInfo(self) -> None
+        initialize attributes for coordinates
+        """
         self.__coor_types = ['body', 'surf']
         self.__coor = None
         self.__coor_surf = None
         self.__euler = [0,0,0]
 
     def save(self, fpath=None):
-        """ Save this object as a dict object """
+        """save(self, fpath=None) -> None
+        save this object as a dict object
+
+        Parameters
+        ----------
+        fpath : float (optional, dafault : './ensemble.pickle')
+            path of the file to save this class into.
+        """
         if fpath is None:
             fpath = "./ensemble.pickle"
             print("`fpath` is not assigned. Save this object to {}.".format(fpath))
@@ -149,27 +169,56 @@ class ensemble_system(slicefft):
         _kw = dict(kw_slicefft=_kw_slicefft, kw_shapes=self._shape.info())
         with open(fpath, "wb") as f:
             pickle.dump(_kw, f)
-
+    
     def shapeinfo(self):
+        """shapeinfo(self) -> list
+        return a list of information on the shapes in this class
+        """
         return self._shape.info()[:]
 
     def a(self):
+        """a(self) -> float
+        return the characteristic length of this instance
+        """
         return self._shape.a + 0.0
 
     def a_range(self):
+        """a_range(self) -> float
+        return the characteristic scale of this instance
+        """
         return self._shape.a_range + 0.0
 
     def a_max(self):
+        """a_max(self) -> float
+        return the maximum of the characteristic lengths of the shapes in this instance
+        """
         return self._shape._as[1:].max()
 
     def shape_name(self):
+        """shape_name(self) -> str
+        return the name of shape
+        """
         return self._shape.shape_name()
 
     def n_shapes(self):
+        """n_shapes(self) -> int
+        return the number of shapes in this instance
+        """
         return self._shape._n_shapes*1
 
     def Coor(self, coor_type='body', *args, **kwargs):
-        """ Calculate the coordinates characterizing the ensemble """
+        """Coor(self, coor_type='body', *args, **kwargs) -> None
+        calculate the coordinates characterizing the ensemble.
+
+        Parameters
+        ----------
+        coor_type : str (default : 'body')
+            type of the coordinates.
+            'body' = the whole coordinates
+            'surf' = the coordinates of the surface
+        args      : options
+        kwargs    : options
+        """
         if self._shape is None:
             raise ValueError("No information on the shape.")
         if coor_type not in self.__coor_types:
@@ -207,8 +256,23 @@ class ensemble_system(slicefft):
                 self.__coor_surf = buff[1:buff.shape[0],:]
 
     def GetCoor(self, coor_type='body', **kwargs):
-        """ Return the coordinates characterizing the ensemble
-            if the coordinates has been already calculated then return them
+        """GetCoor(self, coor_type='body', **kwargs) -> numpy.2darray
+        return the coordinates characterizing the ensemble.
+        If the coordinates has been already calculated, then return them.
+
+        Parameters
+        ----------
+        coor_type : str (default : 'body')
+            type of the coordinates.
+            'body' = the whole coordinates
+            'surf' = the coordinates of the surface
+        args      : options
+        kwargs    : options
+
+        Returns
+        -------
+        coor : numpy.2darray
+            the coordinates
         """
         if coor_type not in self.__coor_types:
             raise ValueError("coor_type must be '{0}' or'{1}'.".format(self.__coor_types[0], self.__coor_types[1]))
@@ -225,6 +289,29 @@ class ensemble_system(slicefft):
         return coor
 
     def PlotCoor(self, mode="solid", coor_type='body', color='#00fa9a', alpha=0.5):
+        """PlotCoor(self, mode="solid", coor_type='body', color='#00fa9a', alpha=0.5) -> pyplot.figure, pyplot.axes
+        plot the coordinates characterizing the ensemble
+
+        Parameters
+        ----------
+        mode      : str
+            mode of plotting.
+            'solid' = plot all the coordinates
+            'surface' = plot the surface of shapes (this is valid for the spheroidal shapes)
+        coor_type : str
+            type of the coordinates.
+            'body' = the whole coordinates
+            'surf' = the coordinates of the surface
+        color     : str
+            color code
+        alpha     : float
+            alpha parameter of color
+        
+        Returns
+        -------
+        fig : pyplot.figure
+        ax  : pyplot.axes
+        """
         if mode == "surface":
             fig = plt.figure(50, figsize=(6,5), dpi=100)
             plt.clf()
@@ -238,7 +325,7 @@ class ensemble_system(slicefft):
             for info in _infos:
                 _center = info.get("kwargs").get("center")
                 _a = info.get("a")
-                ax.plot_surface(_a*x + _center[0], _a*y + _center[1], _a*z + _center[2], rstride=1, cstride=1, color='b', linewidth=0, cmap=cm.jet)
+                ax.plot_surface(_a*x + _center[0], _a*y + _center[1], _a*z + _center[2], rstride=1, cstride=1, color='b', linewidth=0, cmap=cm.ocean)
 
         else:
             if coor_type not in self.__coor_types:
@@ -254,22 +341,25 @@ class ensemble_system(slicefft):
         return fig, ax
 
 class ensemble(object):
-    """ Class which represent an ensemble of particles.
-        This class is supposed to be used by `ensemble_system`.
+    """ensemble class
+    This class represents an ensemble of particles.
+    This class is supposed to be used by `ensemble_system`.
     """
 
     _shape_name = "ensemble"
+
     def __init__(self, shapes, weighting=None, *args, **kwargs):
-        ''' Initialization 
-        
+        ''' __init__(self, shapes, weighting=None, *args, **kwargs) -> None
+        initialize this class
+
         Parameters
         ----------
-        shapes : kwargs or list of kwargs
+        shapes    : kwargs or list of kwargs
             information on particles
         weighting : bool
             True = weighting with particles' densities
-        args : option
-        kwargs : option
+        args      : option
+        kwargs    : option
         '''
         # Keep kwargs of each particle
         if type(shapes) != list:
@@ -315,44 +405,78 @@ class ensemble(object):
         self.center = [0., 0., 0.]
 
     def info(self):
+        """info(self) -> list of dict
+        return the list of information on the shapes in this instence
+        """
         kw_list = [None] * self._n_shapes
         for ii, _ in enumerate(self._shapes):
             kw_list[ii] = _.info()
         return kw_list
 
     def shape_name(self):
-        """ Return the name of shape (`ensemble` in case of this class) """
+        """shape_name(self) -> str
+        return the name of shape (`ensemble` in case of this class)
+        """
         return self._shape_name
 
     def shapes_name(self):
+        """shapes_name(self) -> list
+        return list of names of shapes
+        """
         return self._shapes_name[:]
 
     def centers(self, polar=False):
-        """ Return the center coordinates of each particles.
-            if polar == True then the polar coordinates are returned.
+        """centers(self, polar=False) -> numpy.2darray
+        return the center coordinates of each particle.
+
+        Parameters
+        ----------
+        polar : bool
+            if True then the polar coordinates are returned.
+        
+        Returns
+        -------
+        centers (polar=False) : numpy.2darray
+        r, theta, phi (polar=True) : numpy.1darray
         """
-        buff = self._centers.copy()
+        centers = self._centers.copy()
         if polar is False:
-            return buff
+            return centers
         else:
-            r = np.linalg.norm(buff, axis=1)
-            theta = np.arctan2(np.sqrt(buff[:,0]**2+buff[:,1]**2), buff[:,2])
-            phi = np.arctan2(buff[:,1], buff[:,0]) + np.pi
+            r = np.linalg.norm(centers, axis=1)
+            theta = np.arctan2(np.sqrt(centers[:,0]**2+centers[:,1]**2), centers[:,2])
+            phi = np.arctan2(centers[:,1], centers[:,0]) + np.pi
             return r, theta, phi
 
     def EulerRot(self, euler):
-        """ TODO: implementation """
+        """EulerRot(self, euler)
+        TODO: implementation
+        """
         # self.__shape_mother.EulerRot(euler)
         # self.center_daughters = mf.EulerRotation(self.center_daughters, euler, 1).copy()
         pass
 
     def Slice(self, xx, yy, z, *args, **kwargs):
-        """ Return the cross-section of the ensemble.
-        < Input parameters >
-            xx, yy  : 2D coordinates (N*M arrays)
-            z       : z coordinate
-            *args   : Option
-            **kwargs: Option
+        """Slice(self, xx, yy, z, *args, **kwargs) -> numpy.2darray
+        get the positions or indices of the section of polyhedron at `z`.
+
+        Parameters
+        ----------
+        xx     : numpy.2darray
+        yy     : numpy.2darray
+        z      : float
+        args   : options
+        kwargs : options
+            is_ind : bool
+                if True, then return the indices of the section.
+                if False, then return the coordinates composing the section.
+        
+        Returns
+        -------
+        ind (is_ind=True)  : numpy.2darray
+            the indices of the section
+        out (is_ind=False) : numpy.2darray
+            the coordinates composing the section
         """
         # if `is_ind` == True then return the indices
         is_ind = True if kwargs.get('is_ind') is None else kwargs.get('is_ind')
@@ -390,7 +514,27 @@ class ensemble(object):
         pass
 
     def SliceSurface(self, xx, yy, z, width, *args, **kwargs):
-        """ Return the surface cross-section.
-            Currently implementation is not considered.
+        """SliceSurface(self, xx, yy, z, width, *args, **kwargs) -> numpy.2darray
+        return the surface cross-section.
+        Currently implementation is not considered.
+        
+        Parameters
+        ----------
+        xx     : numpy.2darray
+        yy     : numpy.2darray
+        z      : float
+        width  : float
+        args   : options
+        kwargs : options
+            is_ind : bool
+                if True, then return the indices of the section.
+                if False, then return the coordinates composing the section.
+        
+        Returns
+        -------
+        ind (is_ind=True)  : numpy.2darray
+            the indices of the section
+        out (is_ind=False) : numpy.2darray
+            the coordinates composing the profile of section
         """
         return self.Slice(xx, yy, z, *args, **kwargs)

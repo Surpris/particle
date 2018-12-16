@@ -56,6 +56,13 @@ class shapeslice(object):
             is_ind : bool
                 if True, then return the indices of the section.
                 if False, then return the coordinates composing the section.
+        
+        Returns
+        -------
+        ind (is_ind=True)  : numpy.2darray
+            the indices of the section
+        out (is_ind=False) : numpy.2darray
+            the coordinates composing the section
         '''
         is_ind = True if kwargs.get('is_ind') is None else kwargs.get('is_ind')
 
@@ -87,6 +94,13 @@ class shapeslice(object):
             is_ind : bool
                 if True, then return the indices of the section.
                 if False, then return the coordinates composing the section.
+        
+        Returns
+        -------
+        ind (is_ind=True)  : numpy.2darray
+            the indices of the section
+        out (is_ind=False) : numpy.2darray
+            the coordinates composing the profile of section
         """
         is_ind = True if kwargs.get('is_ind') is None else kwargs.get('is_ind')
         x2 = (xx-self.center[0])**2/self.ax**2
@@ -118,6 +132,13 @@ class shapeslice(object):
             is_ind : bool
                 if True, then return the indices of the section.
                 if False, then return the coordinates composing the section.
+        
+        Returns
+        -------
+        ind (is_ind=True)  : numpy.2darray
+            the indices of the section
+        out (is_ind=False) : numpy.2darray
+            the coordinates composing the section
         '''
         is_ind = True if kwargs.get('is_ind') is None else kwargs.get('is_ind')
 
@@ -152,6 +173,13 @@ class shapeslice(object):
             is_ind : bool
                 if True, then return the indices of the section.
                 if False, then return the coordinates composing the section.
+        
+        Returns
+        -------
+        ind (is_ind=True)  : numpy.2darray
+            the indices of the section
+        out (is_ind=False) : numpy.2darray
+            the coordinates composing the section
         """
         is_ind = True if kwargs.get('is_ind') is None else kwargs.get('is_ind')
         ind_body = self.Slice(xx, yy, z)

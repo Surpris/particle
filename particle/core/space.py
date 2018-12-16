@@ -2,40 +2,34 @@
 import numpy as np
 
 class space(object):
-    '''
-    ３次元空間のメッシュを与えるクラス。
-    Cartesian座標を想定。
-    x,y方向に対して2Dメッシュを計算する。z方向を含む3Dメッシュは実装しない（メモリの都合）。
-
-    実装している関数は次のようになっている。
-        < 内部利用 >
-        __init__ : 初期化
-
-        < 外部利用 >
-        N               : 各方向のメッシュの数を返す
-        dx              : 各方向の空間分解能を返す
-        df              : 各方向の周波数空間分解能を返す
-        dq              : 各方向の角周波数分解能を返す
-        range_space     : 各方向の空間レンジを返す
-        range_freq      : 各方向の周波数空間レンジを返す
-        range_anglefreq : 各方向の角周波数空間レンジを返す
-        mesh_space      : x方向とy方向による2D空間メッシュを返す
-        mesh_freq       : fx方向とfy方向による2D周波数空間メッシュを返す
-        mesh_anglefreq  : qx方向とqy方向による2D角周波数空間メッシュを返す
+    '''space class
+    This class deals with meshgrids in 3D space.
+    Meshgrids in x- and y- directions are calculated.
+    This class has basic functions for the above purpose and supposed to be inherited by one's class.
     '''
 
     def __init__(self, Nx, xmax, **kwargs):
-        """
-            クラスの初期化。
-            引数について。
-                NX       : the number of point for X axis (X=x, y, z)
-                Xmax     : the maximum of X axis (X=x, y, z)
-                kwargs   : some optional parameters.
+        """__init__(self, Nx, xmax, **kwargs) -> None
+        initialize this class
+
+        Parameters
+        ----------
+        Nx     : the number of grid points in the x direction
+        xmax   : the maximum of space in the x direction
+        kwargs : options
+            Ny   : int
+                the number of grid points in the y direction
+            Nz   : int
+                the number of grid points in the z direction
+            ymax : float
+                the maximum of space in the y direction
+            zmax : float
+                the maximum of space in the z direction
         """
         if type(Nx) not in [int, np.int32, np.int64]:
-            raise ValueError("N must be integer and be larger than 1.")
+            raise ValueError("Nx must be integer and be larger than 1.")
         if Nx <= 1:
-            raise ValueError("N must be larger than 1.")
+            raise ValueError("Nx must be larger than 1.")
         if xmax <= 0:
             raise ValueError("xmax must be positive.")
 
@@ -84,34 +78,37 @@ class space(object):
         self._qz = self._freqz*2*np.pi
 
     def N(self):
-        """
-            各方向のメッシュのポイント数を返す。
+        """N(self) -> numpy.1darray
+        return the number of grid points in each direction
         """
         return np.array([self._Nx, self._Ny, self._Nz])
 
     def dx(self):
-        """
-            実空間の分解能を返す。
+        """dx(self) -> numpy.1darray
+        return the spatial resolution in each direction
         """
         return np.array([self._dx, self._dy, self._dz])
 
     def df(self):
-        """
-            周波数空間の分解能を返す。
+        """df(self) -> numpy.1darray
+        return the frequency resolution in each direction
         """
         return np.array([self._dfx, self._dfy, self._dfz])
 
     def dq(self):
-        """
-            各周波数空間の分解能を返す。
+        """dq(self) -> numpy.1darray
+        return the anglefrequency resolution (=2\pi*freqneucy)
         """
         return np.array([self._dqx, self._dqy, self._dqz])
 
     def range_space(self, x_threshold=None, y_threshold=None, z_threshold=None):
-        """
-             各方向のレンジを返す。
-             引数について、
-                X_threshold : threshold to each range to return (X=x, y, z)
+        """range_space(self, x_threshold=None, y_threshold=None, z_threshold=None)
+            -> numpy.1darray, numpy.1darray, numpy.1darray
+        return ranges in each direction
+
+        Parameters
+        ----------
+        X_threshold : threshold to each range to return (X=x, y, z)
         """
         if x_threshold is None: _sprange_x = self._sprange_x*1
         else:
@@ -131,22 +128,32 @@ class space(object):
         return _sprange_x, _sprange_y, _sprange_z
 
     def mesh_space(self, x_threshold=None, y_threshold=None, absolute=False):
-        """
-            実空間の2Dメッシュを返す。
-            引数について、
-               X_threshold : threshold to each range to return (X=x, y, z)
-               absolute     : True: return sqrt(x^2 + y^2)
+        """mesh_space(self, x_threshold=None, y_threshold=None, absolute=False)
+            -> numpy.2darray, numpy.2darray
+        return meshgrids in x- and y- direction
+
+        Parameters
+        ----------
+        X_threshold : float
+            threshold to each range to return (X=x, y, z)
+        absolute    : bool (default : False)
+            if True, then return sqrt(x^2 + y^2)
         """
         _sprange_x, _sprange_y, _sprange_z = self.range_space(x_threshold, y_threshold)
         _xx, _yy = np.meshgrid(_sprange_x, _sprange_y)
-        if absolute is True: return np.sqrt(_xx**2 + _yy**2)
-        else: return _xx, _yy
+        if absolute is True: 
+            return np.sqrt(_xx**2 + _yy**2)
+        else: 
+            return _xx, _yy
 
     def range_freq(self, fx_threshold=None, fy_threshold=None, fz_threshold=None):
-        """
-            周波数空間のレンジを返す。
-            引数について、
-                fX_threshold : threshold to each range to return (X=x, y, z)
+        """range_freq(self, fx_threshold=None, fy_threshold=None, fz_threshold=None)
+            -> numpy.1darray, numpy.1darray, numpy.1darray
+        return frequency ranges in each direction
+
+        Parameters
+        ----------
+        fX_threshold : threshold to each range to return (X=x, y, z)
         """
         if fx_threshold is None: _fx = self._freqx*1
         else:
@@ -165,22 +172,32 @@ class space(object):
         return _fx, _fy, _fz
 
     def mesh_freq(self, fx_threshold=None, fy_threshold=None, absolute=False):
-        """
-            周波数空間の2Dメッシュを返す。
-            引数について、
-                fX_threshold : threshold to each range to return (X=x, y, z)
-                absolute     : True: return sqrt(fx^2 + fy^2)
+        """mesh_freq(self, fx_threshold=None, fy_threshold=None, absolute=False)
+            -> numpy.2darray, numpy.2darray
+        return frequency meshgrids in fx- and fy- direction
+
+        Parameters
+        ----------
+        fX_threshold : float
+            threshold to each range to return (X=x, y, z)
+        absolute    : bool (default : False)
+            if True, then return sqrt(x^2 + y^2)
         """
         _fx, _fy, _fz = self.range_freq(fx_threshold, fy_threshold)
         _fxx, _fyy = np.meshgrid(_fx, _fy)
-        if absolute is True: return np.sqrt(_fxx**2 + _fyy**2)
-        else: return _fxx, _fyy
+        if absolute is True: 
+            return np.sqrt(_fxx**2 + _fyy**2)
+        else: 
+            return _fxx, _fyy
 
     def range_anglefreq(self, qx_threshold=None, qy_threshold=None, qz_threshold=None):
-        """
-            角周波数空間でのレンジを返す。
-            引数について、
-                qX_threshold : threshold to each range to return (X=x, y, z)
+        """range_anglefreq(self, qx_threshold=None, qy_threshold=None, qz_threshold=None)
+            -> numpy.1darray, numpy.1darray, numpy.1darray
+        return anglefrequency ranges in each direction
+
+        Parameters
+        ----------
+        qX_threshold : threshold to each range to return (X=x, y, z)
         """
         if qx_threshold is None: _qx = self._qx*1
         else:
@@ -199,16 +216,23 @@ class space(object):
         return _qx, _qy, _qz
 
     def mesh_anglefreq(self, qx_threshold=None, qy_threshold=None, absolute=False):
-        """
-            角周波数空間での2Dメッシュを返す。
-            引数について、
-                qX_threshold : threshold to each range to return (X=x, y, z)
-                absolute     : True: return sqrt(qx^2 + qy^2)
+        """mesh_anglefreq(self, qx_threshold=None, qy_threshold=None, absolute=False)
+            -> numpy.2darray, numpy.2darray
+        return anglefrequency meshgrids in qx- and qy- direction
+
+        Parameters
+        ----------
+        qX_threshold : float
+            threshold to each range to return (X=x, y, z)
+        absolute    : bool (default : False)
+            if True, then return sqrt(x^2 + y^2)
         """
         _qx, _qy, _qz = self.range_anglefreq(qx_threshold, qy_threshold)
         _qxx, _qyy = np.meshgrid(_qx, _qy)
-        if absolute is True: return np.sqrt(_qxx**2 + _qyy**2)
-        else: return _qxx, _qyy
+        if absolute is True: 
+            return np.sqrt(_qxx**2 + _qyy**2)
+        else: 
+            return _qxx, _qyy
 
     def __enter__(self):
         return self
