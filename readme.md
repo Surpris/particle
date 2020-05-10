@@ -68,3 +68,4 @@ The following shapes are available:
 * 1.0.1 : fix bugs
 * 1.0.2 : fix bugs
 * 1.1 : update documentation, add density-weighting mode
+* 1.1.1 : fix bugs
