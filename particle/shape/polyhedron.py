@@ -6,15 +6,19 @@ from ..core import mathfunctions as mf
 from ..core.space import space
 from .shapeslice import shapeslice
 
+
 class polyhedron(shapeslice):
     """polyhedron class.
     This class has basic functions of each polyhedron.
-    Based on the list of the distance "DD" from the center defined as an arbitrary surface vector "NN",
+    Based on the list of the distance "DD" from the center defined
+    as an arbitrary surface vector "NN",
     a region enclosed by them is given as the polyhedron.
     The surface energy "GG" of the surface may be adjusted if required.
     """
+
     def __init__(self, a, NN, DD, *args, **kwargs):
         """__init__(self, a, NN, DD, *args, **kwargs) -> None
+
         initialize this class.
 
         Parameters
@@ -41,7 +45,8 @@ class polyhedron(shapeslice):
             rand    : bool
                 flag for random-depth chamferring
         """
-        self._shape_name = "polyhedron" if kwargs.get("shape_name") is None else kwargs.get("shape_name")
+        self._shape_name = "polyhedron" if kwargs.get(
+            "shape_name") is None else kwargs.get("shape_name")
         # Get information from kwargs
         euler = kwargs.get('euler')
         if euler is None:
@@ -67,27 +72,28 @@ class polyhedron(shapeslice):
                 if type(_distance_rate) != np.ndarray:
                     raise TypeError("Invalid type for `distance_rate`.")
                 elif len(_distance_rate) != len(self.DD):
-                    raise ValueError("The length of `distance_rate` is not equal to `DD`.")
+                    raise ValueError(
+                        "The length of `distance_rate` is not equal to `DD`.")
                 self.DD = (1. - _distance_rate) * self.DD
 
         GG = kwargs.get("GG")
         if GG is None:
             self.GG = np.zeros(len(self.DD), dtype=float)
-        elif type(GG) == list:
+        elif isinstance(GG, list):
             self.GG = np.array(GG)
-        elif type(GG) == np.ndarray and len(GG.shape) == 1:
+        elif isinstance(GG, np.ndarray) and len(GG.shape) == 1:
             self.GG = GG.copy()
         else:
             raise TypeError("`GG` must be an 1-D array.")
-        
+
         self.gamma_max = self.GG.max()
-        self.center = [0., 0., 0.] if kwargs.get('center') is None else kwargs.get('center')
+        self.center = kwargs.get('center', [0., 0., 0.])
 
         # Check validity of surface
         self._check_poly_validity()
 
         self.a = a
-        self.a_range = self.a*1.5 if kwargs.get("a_range") is None else kwargs.get("a_range")
+        self.a_range = kwargs.get("a_range", self.a * 1.5)
 
         # Permutation of normal vectors
         self.perm = [0, 1, 2] if permute is None else permute
@@ -122,22 +128,28 @@ class polyhedron(shapeslice):
                 sigma = 0.1
                 med = 0.5
                 e_rand = np.exp(-(rrr-med)**2/2./sigma**2)
-                self.rand = np.ones(_mid.shape[0], dtype=float) if rand is False else e_rand[0:_mid.shape[0]]
+                if rand is False:
+                    self.rand = np.ones(_mid.shape[0], dtype=float)
+                else:
+                    self.rand = e_rand[0:_mid.shape[0]]
 
                 for ii in range(_mid.shape[0]):
-                    _leng = (1.-(1.-self.chamfer)*self.rand[ii])*np.linalg.norm(_mid[ii,:])
-                    _mid[ii,:] /= np.linalg.norm(_mid[ii,:])
+                    _leng = (1. - (1. - self.chamfer) * self.rand[ii]) * \
+                        np.linalg.norm(_mid[ii, :])
+                    _mid[ii, :] /= np.linalg.norm(_mid[ii, :])
                     _dd.append(_leng)
-                    _gg.append(self.gamma_max*_leng)
+                    _gg.append(self.gamma_max * _leng)
                 self._NN = np.vstack((self._NN, _mid))
                 self.DD = np.hstack((self.DD, np.array(_dd)))
                 self.GG = np.hstack((self.GG, np.array(_gg)))
 
         # Initialize shapeslice class.
         self.NN = self._NN.copy()
-        shapeslice.__init__(self, self._shape_name, self.a,
-                            NN=self.NN, DD=self.DD, perm=self.perm, center=self.center, 
-                            density=kwargs.get("density"))
+        shapeslice.__init__(
+            self, self._shape_name, self.a,
+            NN=self.NN, DD=self.DD, perm=self.perm, center=self.center,
+            density=kwargs.get("density")
+        )
 
         # Euler rotation.
         self.EulerRot(euler)
@@ -146,6 +158,7 @@ class polyhedron(shapeslice):
 
     def EulerRot(self, euler):
         """EulerRot(self, euler) -> None
+
         Rotate this object according to the Euler angle `euler`.
 
         Parameters
@@ -158,17 +171,21 @@ class polyhedron(shapeslice):
 
     def UpdSlice(self):
         """UpdSlice(self) -> None
+
         update this object.
         """
-        shapeslice.__init__(self, self._shape_name, self.a,
-                            NN=self.NN, DD=self.DD, perm=self.perm, center=self.center, 
-                            density=self.density)
+        shapeslice.__init__(
+            self, self._shape_name, self.a,
+            NN=self.NN, DD=self.DD, perm=self.perm, center=self.center,
+            density=self.density
+        )
 
     def shape_name(self):
         return self._shape_name + ""
 
     def midpoints(self, *args, **kwargs):
         """midpoints(self, *args, **kwargs) -> None
+
         get the midpoints of each edge.
         This function is an abstract function.
         Implementation is done with child classes that inherit this class.
@@ -177,6 +194,7 @@ class polyhedron(shapeslice):
 
     def vertices(self, *args, **kwargs):
         """vertices(self, *args, **kwargs) -> None
+
         get vertices of polyhedron.
         This function is an abstract function.
         Implementation is done with child classes that inherit this class.
@@ -185,6 +203,7 @@ class polyhedron(shapeslice):
 
     def chamferring(self, v_or_e, chamfer_rate):
         """chamferring(self, v_or_e, chamfer_rate) -> None
+
         chamfer the edges and vertices.
 
         Parameters
@@ -193,7 +212,7 @@ class polyhedron(shapeslice):
             vertices ("v") or edges ("e")
         chamfer_rate : numpy.1darray or list
             depth of chamferring.
-            Actual distance of the new facet(s) from the origin is given by 
+            Actual distance of the new facet(s) from the origin is given by
             `1.0 - chamfer_rate` times the original distance.
         """
         if v_or_e == "v":
@@ -215,11 +234,14 @@ class polyhedron(shapeslice):
 
         if len(chamfer_rate) != _chamf.shape[0]:
             _ = "vertice" if v_or_e == "v" else "edges"
-            raise ValueError("The length of `chamfer_rate` is not equal to  the number of `{0}`.".format(_))
+            raise ValueError(
+                "The length of `chamfer_rate` is not equal to " +
+                "the number of `{0}`.".format(_)
+            )
 
         for ii in range(_chamf.shape[0]):
-            _leng = (1. - chamfer_rate[ii])*np.linalg.norm(_chamf[ii,:])
-            _chamf[ii,:] /= np.linalg.norm(_chamf[ii,:])
+            _leng = (1. - chamfer_rate[ii])*np.linalg.norm(_chamf[ii, :])
+            _chamf[ii, :] /= np.linalg.norm(_chamf[ii, :])
             _dd.append(_leng)
             _gg.append(self.gamma_max*_leng)
 
@@ -229,18 +251,27 @@ class polyhedron(shapeslice):
 
     def info(self):
         """info(self) -> dict
+
         get information to make one object by `particleshape`.
         """
-        return dict(shape_name=self._shape_name, a=self.a, NN=self._NN, DD=self.DD, kwargs=self._kwargs)
+        return dict(
+            shape_name=self._shape_name,
+            a=self.a,
+            NN=self._NN,
+            DD=self.DD,
+            kwargs=self._kwargs
+        )
 
     def _check_poly_validity(self):
         """_check_poly_validity(self) -> None
+
         check the validity of a given face.
-        
+
         Determination condition on whether to construct a polyhedron
         ------------------------------------------------------------
         A cube having a size three times larger than max (DD) is prepared.
-        If at least one of the points belonging to that side is inside at least one surface, it is out.
+        If at least one of the points belonging to that side is inside
+        at least one surface, it is out.
         That is, it is OK if any side is outside of any side.
         """
         # Prepare the outer space.
@@ -273,18 +304,23 @@ class polyhedron(shapeslice):
         # Judge
         ind = np.ones(coor_outside.shape[0], dtype=bool)
         for jj in range(len(self._NN)):
-            ind = ind & (coor_outside[:,0]*self._NN[jj,0]
-                        +coor_outside[:,1]*self._NN[jj,1]
-                        +coor_outside[:,2]*self._NN[jj,2]
-                        <= self.DD[jj])
+            ind = ind & (coor_outside[:, 0]*self._NN[jj, 0]
+                         + coor_outside[:, 1]*self._NN[jj, 1]
+                         + coor_outside[:, 2]*self._NN[jj, 2]
+                         <= self.DD[jj])
         if sum(ind) != 0:
-            raise ValueError("Invalid parameters for constructing a polyhedron.")
+            raise ValueError(
+                "Invalid parameters for constructing a polyhedron.")
+
 
 """ --- Definition for standalone use with other functions --- """
+
+
 def check_poly_validity(NN, DD, center=[0., 0., 0.]):
     """check_poly_validity(NN, DD, center=[0., 0., 0.]) -> bool
+
     check the validity of a given face.
-    
+
     Parameters
     ----------
     NN     : list or numpy.2darray
@@ -293,15 +329,16 @@ def check_poly_validity(NN, DD, center=[0., 0., 0.]):
         discante from the center of a polyhedron
     center : list or numpy.1darray
         the center of a polyhedron
-    
+
     Returns
     -------
     True / False
-    
+
     Determination condition on whether to construct a polyhedron
     ------------------------------------------------------------
     A cube having a size three times larger than max (DD) is prepared.
-    If at least one of the points belonging to that side is inside at least one surface, it is out.
+    If at least one of the points belonging to that side is inside
+    at least one surface, it is out.
     That is, it is OK if any side is outside of any side.
     """
     # Prepare the outer space.
@@ -334,8 +371,8 @@ def check_poly_validity(NN, DD, center=[0., 0., 0.]):
     # Judge
     ind = np.ones(coor_outside.shape[0], dtype=bool)
     for jj in range(len(NN)):
-        ind = ind & (coor_outside[:,0]*NN[jj,0]
-                    +coor_outside[:,1]*NN[jj,1]
-                    +coor_outside[:,2]*NN[jj,2]
-                    <= DD[jj])
+        ind = ind & (coor_outside[:, 0]*NN[jj, 0]
+                     + coor_outside[:, 1]*NN[jj, 1]
+                     + coor_outside[:, 2]*NN[jj, 2]
+                     <= DD[jj])
     return sum(ind) == 0

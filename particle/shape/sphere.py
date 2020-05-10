@@ -2,10 +2,13 @@
 
 from .spheroid import spheroid
 
+
 class sphere(spheroid):
     '''sphere class'''
+
     def __init__(self, a, **kwargs):
         """__init__(self, a, **kwargs) -> None
+
         initialize this class.
 
         Parameters

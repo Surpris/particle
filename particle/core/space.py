@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 
+
 class space(object):
     '''space class
+
     This class deals with meshgrids in 3D space.
     Meshgrids in x- and y- directions are calculated.
-    This class has basic functions for the above purpose and supposed to be inherited by one's class.
+    This class has basic functions for the above purpose and
+    supposed to be inherited by one's class.
     '''
 
     def __init__(self, Nx, xmax, **kwargs):
@@ -110,17 +113,20 @@ class space(object):
         ----------
         X_threshold : threshold to each range to return (X=x, y, z)
         """
-        if x_threshold is None: _sprange_x = self._sprange_x*1
+        if x_threshold is None:
+            _sprange_x = self._sprange_x*1
         else:
             _ind = np.where(np.abs(self._sprange_x) <= x_threshold)[0]
             _sprange_x = self._sprange_x[_ind]
 
-        if y_threshold is None: _sprange_y = self._sprange_y*1
+        if y_threshold is None:
+            _sprange_y = self._sprange_y*1
         else:
             _ind = np.where(np.abs(self._sprange_y) <= y_threshold)[0]
             _sprange_y = self._sprange_y[_ind]
 
-        if z_threshold is None: _sprange_z = self._sprange_z*1
+        if z_threshold is None:
+            _sprange_z = self._sprange_z*1
         else:
             _ind = np.where(np.abs(self._sprange_z) <= z_threshold)[0]
             _sprange_z = self._sprange_z[_ind]
@@ -139,11 +145,12 @@ class space(object):
         absolute    : bool (default : False)
             if True, then return sqrt(x^2 + y^2)
         """
-        _sprange_x, _sprange_y, _sprange_z = self.range_space(x_threshold, y_threshold)
+        _sprange_x, _sprange_y, _sprange_z = self.range_space(
+            x_threshold, y_threshold)
         _xx, _yy = np.meshgrid(_sprange_x, _sprange_y)
-        if absolute is True: 
+        if absolute is True:
             return np.sqrt(_xx**2 + _yy**2)
-        else: 
+        else:
             return _xx, _yy
 
     def range_freq(self, fx_threshold=None, fy_threshold=None, fz_threshold=None):
@@ -155,17 +162,20 @@ class space(object):
         ----------
         fX_threshold : threshold to each range to return (X=x, y, z)
         """
-        if fx_threshold is None: _fx = self._freqx*1
+        if fx_threshold is None:
+            _fx = self._freqx*1
         else:
             _ind_f = np.where(np.abs(self._freqx) <= fx_threshold)[0]
             _fx = self._freqx[_ind_f]
 
-        if fy_threshold is None: _fy = self._freqy*1
+        if fy_threshold is None:
+            _fy = self._freqy*1
         else:
             _ind_f = np.where(np.abs(self._freqy) <= fy_threshold)[0]
             _fy = self._freqy[_ind_f]
 
-        if fz_threshold is None: _fz = self._freqz*1
+        if fz_threshold is None:
+            _fz = self._freqz*1
         else:
             _ind_f = np.where(np.abs(self._freqz) <= fz_threshold)[0]
             _fz = self._freqz[_ind_f]
@@ -185,9 +195,9 @@ class space(object):
         """
         _fx, _fy, _fz = self.range_freq(fx_threshold, fy_threshold)
         _fxx, _fyy = np.meshgrid(_fx, _fy)
-        if absolute is True: 
+        if absolute is True:
             return np.sqrt(_fxx**2 + _fyy**2)
-        else: 
+        else:
             return _fxx, _fyy
 
     def range_anglefreq(self, qx_threshold=None, qy_threshold=None, qz_threshold=None):
@@ -199,17 +209,20 @@ class space(object):
         ----------
         qX_threshold : threshold to each range to return (X=x, y, z)
         """
-        if qx_threshold is None: _qx = self._qx*1
+        if qx_threshold is None:
+            _qx = self._qx*1
         else:
             _ind_q = np.where(np.abs(self._qx) <= qx_threshold)[0]
             _qx = self._qx[_ind_q]
 
-        if qy_threshold is None: _qy = self._qy*1
+        if qy_threshold is None:
+            _qy = self._qy*1
         else:
             _ind_q = np.where(np.abs(self._qy) <= qy_threshold)[0]
             _qy = self._qy[_ind_q]
 
-        if qz_threshold is None: _qz = self._qz*1
+        if qz_threshold is None:
+            _qz = self._qz*1
         else:
             _ind_q = np.where(np.abs(self._qz) <= qz_threshold)[0]
             _qz = self._qz[_ind_q]
@@ -229,9 +242,9 @@ class space(object):
         """
         _qx, _qy, _qz = self.range_anglefreq(qx_threshold, qy_threshold)
         _qxx, _qyy = np.meshgrid(_qx, _qy)
-        if absolute is True: 
+        if absolute is True:
             return np.sqrt(_qxx**2 + _qyy**2)
-        else: 
+        else:
             return _qxx, _qyy
 
     def __enter__(self):

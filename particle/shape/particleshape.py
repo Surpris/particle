@@ -8,6 +8,7 @@ from .icosahedron import icosahedron
 from .wulffpolyhedron import wulffpolyhedron
 from .polyhedron import polyhedron
 
+
 def particleshape(**info):
     """particleshape(**info) -> (object)
     generate one object according to `info`.

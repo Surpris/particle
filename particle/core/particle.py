@@ -5,7 +5,7 @@ import os
 import pickle
 import datetime
 import numpy as np
-from numpy.fft import *
+# from numpy.fft import *
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 # import sys
@@ -13,21 +13,23 @@ from mpl_toolkits.mplot3d import Axes3D
 
 # User modules
 # from . import core
-from . import mathfunctions as mf
+# from . import mathfunctions as mf
 # from . import slicefft
 from .slicefft import slicefft
 # from . import shape
-from ..shape import *
+from ..shape import (
+    sphere, spheroid, cube, cuboctahedron, icosahedron, wulffpolyhedron,
+    polyhedron, particleshape, hailstone, hailstone_with_sphere
+)
+
 
 class particle(slicefft):
+    '''particle(slicefft)
+
+    Class for treating shapes integrally.
     '''
-    粒子形状を総括的に扱うクラス。
-    slicefftクラスを継承することでMulti-slice FTが実行できるようにしている。
-    '''
+
     def __init__(self, *args, **kwargs):
-        """
-            クラスの初期化。
-        """
         if len(args) <= 1:
             if len(args) == 1:
                 if type(args[0]) == str:
@@ -35,20 +37,29 @@ class particle(slicefft):
                         kwargs = pickle.load(f)
                 elif type(args[0]) == dict:
                     kwargs = args[0]
-            N = kwargs.get('Nx'); xmax = kwargs.get('xmax')
-            shape = kwargs.get('shape'); R = kwargs.get('R')
+            N = kwargs.get('Nx')
+            xmax = kwargs.get('xmax')
+            shape = kwargs.get('shape')
+            R = kwargs.get('R')
             del kwargs['Nx'], kwargs['xmax'], kwargs['shape'], kwargs['R']
             self.__kwargs = kwargs
-        elif len(args) < 4: raise Exception('Failure.')
+        elif len(args) < 4:
+            raise Exception('Failure.')
         else:
-            N = args[0]; xmax = args[1]; shape = args[2]; R = args[3]
+            N = args[0]
+            xmax = args[1]
+            shape = args[2]
+            R = args[3]
             self.__kwargs = kwargs
 
         self.__initiator = dict(Nx=N, xmax=xmax, shape=shape, R=R)
         self.__InitFileInfo(kwargs.get('savefldr'), kwargs.get('savecount'))
         slicefft.__init__(self, N, xmax, **kwargs)
-        coorargs = dict(coor=kwargs.get('coor'), coor_surf=kwargs.get('coor_surf'),
-                        euler=kwargs.get('euler'))
+        coorargs = dict(
+            coor=kwargs.get('coor'),
+            coor_surf=kwargs.get('coor_surf'),
+            euler=kwargs.get('euler')
+        )
         self.__InitCoorInfo(**coorargs)
         self.__SetParticle(shape, R, **kwargs)
 
@@ -59,7 +70,8 @@ class particle(slicefft):
         self.EulerRot()
 
     def __SetParticle(self, shape, *args, **kwargs):
-        self.__hailstone = False if kwargs.get('hailstone') is None else kwargs.get('hailstone')
+        self.__hailstone = False if kwargs.get(
+            'hailstone') is None else kwargs.get('hailstone')
         if type(shape) is not str:
             self._shape = shape
             return
@@ -90,7 +102,8 @@ class particle(slicefft):
             kwargs["NN"] = _NN
             kwargs["DD"] = _DD
         elif shape_lower == "hailstone":
-            self.__hailstone = False # "hailstone" クラスとのバッティングを避けるための一時的対処
+            # temporal treatment to avoid conflict with the "hailstone" class
+            self.__hailstone = False
             _shape_mother = kwargs.get("shape_mother")
             _shape_daughters = kwargs.get("shape_daughters")
             if _shape_mother is not None and _shape_daughters is not None:
@@ -105,7 +118,8 @@ class particle(slicefft):
                 _shape_daughters = []
                 for _info in _daughter_kwargs:
                     _shape_daughters.append(particleshape(**_info))
-            self._shape = hailstone(_shape_mother, _shape_daughters, *args, **kwargs)
+            self._shape = hailstone(
+                _shape_mother, _shape_daughters, *args, **kwargs)
             # kwargs['shape_mother'] = _shape_mother
             # kwargs['shape_daughters'] = _shape_daughters
         else:
@@ -121,14 +135,14 @@ class particle(slicefft):
     def __InitFileInfo(self, savefldr=None, count=None):
         self.__d = datetime.datetime.today()
         if savefldr is None or type(savefldr) is not str:
-            self.__savefldrpath = 'G:/UserData/Python_output/out_{0:%Y%m%d}/'.format(self.__d)
+            self.__savefldrpath = 'G:/UserData/Python_output/out_{0:%Y%m%d}/'.\
+                format(self.__d)
         else:
             self.__savefldrpath = savefldr
         try:
             os.makedirs(self.__savefldrpath)
-        except Exception as e:
+        except Exception:
             pass
-            # print(e)
         self.__filename = 'particle.particle'
         self.__filepath = self.__savefldrpath + self.__filename
         if count is None or type(count) is not int:
@@ -138,9 +152,12 @@ class particle(slicefft):
 
     def __InitCoorInfo(self, **kwargs):
         self.__coor_types = ['body', 'surf']
-        self.__coor = None if kwargs.get('coor') is None else kwargs.get('coor')
-        self.__coor_surf = None if kwargs.get('coor_surf') is None else kwargs.get('coor_surf')
-        self.__euler = [0,0,0] if kwargs.get('euler') is None else kwargs.get('euler')
+        self.__coor = None if kwargs.get(
+            'coor') is None else kwargs.get('coor')
+        self.__coor_surf = None if kwargs.get(
+            'coor_surf') is None else kwargs.get('coor_surf')
+        self.__euler = [0, 0, 0] if kwargs.get(
+            'euler') is None else kwargs.get('euler')
 
     def save(self, filepath=None, nameonly=False, overwrite=False):
         self.__kwargs.update(self.__initiator)
@@ -177,7 +194,8 @@ class particle(slicefft):
         while(os.path.exists(buff_filepath)):
             _ext = _filepath.split('.')[-1]
             self.__savecount += 1
-            buff_filepath = _filepath.replace('.'+_ext, '_save_{0:04d}.{1}'.format(self.__savecount, _ext))
+            buff_filepath = _filepath.replace(
+                '.'+_ext, '_save_{0:04d}.{1}'.format(self.__savecount, _ext))
         _filepath = buff_filepath
         print('Save to the new path: {0}'.format(_filepath))
 
@@ -187,8 +205,9 @@ class particle(slicefft):
             pickle.dump(self.__kwargs, f)
 
     def copy(self):
-        """
-            同じ粒子を返す。
+        """copy(self) -> particle
+
+        copy self
         """
         self.__kwargs.update(self.__initiator)
         self.__kwargs['shape'] = self._shape_name
@@ -246,41 +265,52 @@ class particle(slicefft):
         if self._shape is None:
             raise ValueError("No information on the shape.")
         if coor_type not in self.__coor_types:
-            raise ValueError("coor_type must be '{0}' or'{1}'.".format(self.__coor_types[0], self.__coor_types[1]))
+            raise ValueError("coor_type must be '{0}' or'{1}'.".format(
+                self.__coor_types[0], self.__coor_types[1]))
         if coor_type is self.__coor_types[0]:
             _slice = self._shape.Slice
         elif coor_type is self.__coor_types[1]:
             try:
                 _slice = self._shape.SliceSurface
-            except:
-                print('Failure in setting the calculation method for surface coordinates.')
+            except Exception:
+                print(
+                    'Failure in setting the calculation method for surface coordinates.'
+                )
                 print('The method for body coordinates will be used.')
                 _slice = self._shape.Slice
 
-        self.__is_trunc = False if kwargs.get('is_trunc') is None else kwargs.get('is_trunc')
+        self.__is_trunc = False if kwargs.get(
+            'is_trunc') is None else kwargs.get('is_trunc')
 
-        _sprange_x, _sprange_y, _sprange_z = self.range_space(self._shape.a_range,self._shape.a_range,self._shape.a_range)
+        _sprange_x, _sprange_y, _sprange_z = self.range_space(
+            self._shape.a_range, self._shape.a_range, self._shape.a_range
+        )
         _xx, _yy = np.meshgrid(_sprange_x, _sprange_y)
         dx = self.dx()[0]
-        buff = np.zeros((1,3), dtype=float)
+        buff = np.zeros((1, 3), dtype=float)
         for zz in _sprange_z:
-            coor1 = _slice(_xx, _yy, zz, dx, is_ind=False, is_trunc=self.__is_trunc)
+            coor1 = _slice(_xx, _yy, zz, dx, is_ind=False,
+                           is_trunc=self.__is_trunc)
             buff = np.concatenate((buff, coor1))
 
         if coor_type is self.__coor_types[0]:
-            if buff.shape[0] is 1:
+            if buff.shape[0] == 1:
                 self.__coor = None
             else:
-                self.__coor = buff[1:buff.shape[0],:]
+                self.__coor = buff[1:buff.shape[0], :]
         elif coor_type is self.__coor_types[1]:
-            if buff.shape[0] is 1:
+            if buff.shape[0] == 1:
                 self.__coor_surf = None
             else:
-                self.__coor_surf = buff[1:buff.shape[0],:]
+                self.__coor_surf = buff[1:buff.shape[0], :]
 
     def GetCoor(self, coor_type='body', **kwargs):
         if coor_type not in self.__coor_types:
-            raise ValueError("coor_type must be '{0}' or'{1}'.".format(self.__coor_types[0], self.__coor_types[1]))
+            raise ValueError(
+                "coor_type must be '{0}' or'{1}'.".format(
+                    self.__coor_types[0], self.__coor_types[1]
+                )
+            )
         if coor_type is self.__coor_types[0]:
             if self.__coor is None:
                 self.Coor(coor_type, **kwargs)
@@ -290,17 +320,23 @@ class particle(slicefft):
                 self.Coor(coor_type, **kwargs)
             coor = self.__coor_surf
         if coor is None:
-            raise ValueError("No information on the coordinates in the surface.")
+            raise ValueError(
+                "No information on the coordinates in the surface."
+            )
         return coor
 
     def PlotCoor(self, coor_type='body', color='#00fa9a', alpha=0.5):
         if coor_type not in self.__coor_types:
-            raise ValueError("coor_type must be '{0}' or'{1}'.".format(self.__coor_types[0], self.__coor_types[1]))
+            raise ValueError(
+                "coor_type must be '{0}' or'{1}'.".format(
+                    self.__coor_types[0], self.__coor_types[1]
+                )
+            )
         coor = self.GetCoor(coor_type)
-        fig = plt.figure(50, figsize=(6,5), dpi=100)
+        fig = plt.figure(50, figsize=(6, 5), dpi=100)
         plt.clf()
         ax = Axes3D(fig)
-        ax.scatter(coor[:,0], coor[:,1], coor[:,2], c=color, alpha=alpha)
+        ax.scatter(coor[:, 0], coor[:, 1], coor[:, 2], c=color, alpha=alpha)
         ax.set_xlabel('x [nm]')
         ax.set_ylabel('y [nm]')
         ax.set_zlabel('z [nm]')

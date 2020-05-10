@@ -2,13 +2,13 @@
 
 import numpy as np
 
-from .. import core
 from ..core import mathfunctions as mf
 from .shapeslice import shapeslice
 
+
 class dodecahedron(shapeslice):
     '''dodecahedron class (under construction)'''
-    
+
     def __init__(self, a, *args, **kwargs):
         """__init__(self, a, *args, **kwargs) -> None
         initialize this class.
@@ -40,20 +40,27 @@ class dodecahedron(shapeslice):
             chamfer = 1.0
         rand = False if kwargs.get('rand') is None else kwargs.get('rand')
 
-        self.gamma = [62.1, 64.1, 67.3] # (111), (110), (100)
+        self.gamma = [62.1, 64.1, 67.3]  # (111), (110), (100)
         self.gamma_max = max(self.gamma)
 
         phi = 2*np.cos(np.pi/5)
-        self.ki2 = np.array([[phi,1,0],[0,phi,1],[1,0,phi],[-phi,1,0],[0,-phi,1],[1,0,-phi]])/np.linalg.norm(np.array([phi,1,0]))
+        self.ki2 = np.array([
+            [phi, 1, 0], [0, phi, 1], [1, 0, phi],
+            [-phi, 1, 0], [0, -phi, 1], [1, 0, -phi]
+        ])/np.linalg.norm(np.array([phi, 1, 0]))
 
-        self.__NN = np.array([self.ki2[0,:],self.ki2[1,:],self.ki2[2,:],
-                            self.ki2[3,:],self.ki2[4,:],self.ki2[5,:],
-                            -self.ki2[0,:],-self.ki2[1,:],-self.ki2[2,:],
-                            -self.ki2[3,:],-self.ki2[4,:],-self.ki2[5,:]])
+        self.__NN = np.array([
+            self.ki2[0, :], self.ki2[1, :], self.ki2[2, :],
+            self.ki2[3, :], self.ki2[4, :], self.ki2[5, :],
+            -self.ki2[0, :], -self.ki2[1, :], -self.ki2[2, :],
+            -self.ki2[3, :], -self.ki2[4, :], -self.ki2[5, :]
+        ])
 
-        self.DD = 0.5*a/np.linalg.norm(np.array([phi,1,0]))*np.ones(len(self.__NN))
+        self.DD = 0.5*a / \
+            np.linalg.norm(np.array([phi, 1, 0]))*np.ones(len(self.__NN))
 
-        self.center = [0., 0., 0.] if kwargs.get('center') is None else kwargs.get('center')
+        self.center = [0., 0., 0.] if kwargs.get(
+            'center') is None else kwargs.get('center')
 
         self.chamfer = chamfer
         self.a = a + 0.0
@@ -64,7 +71,8 @@ class dodecahedron(shapeslice):
         sigma = 0.1
         med = 0.5
         e_rand = np.exp(-(rrr-med)**2/2./sigma**2)
-        self.rand = np.zeros(30, dtype=float) if rand is False else e_rand[0:30]
+        self.rand = np.zeros(
+            30, dtype=float) if rand is False else e_rand[0:30]
 
         # Permutation of normal vectors
         self.perm = [0, 1, 2] if permute is None else permute

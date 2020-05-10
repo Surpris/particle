@@ -21,7 +21,7 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='1.1',
+    version='1.1.1',
 
     description='Project for calculation of a scattering pattern with MSFT',
     long_description=long_description,
@@ -30,8 +30,8 @@ setup(
     url='https://github.com/Surpris/particle',
 
     # Author details
-    author='Toshiyuki Nishiyama',
-    author_email='t.nishiyama10@gmail.com',
+    author='Toshiyuki Nishiyama Hiraki',
+    author_email='take90-it09-easy27@outlook.jp',
 
     # Choose your license
     license='MIT',

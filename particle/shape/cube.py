@@ -3,15 +3,17 @@
 import numpy as np
 
 from ..core import mathfunctions as mf
-from .polyhedron import polyhedron, check_poly_validity
+from .polyhedron import polyhedron
+
 
 class cube(polyhedron):
     '''cube class'''
-    
+
     _shape_name = 'cube'
     n_vert = 8
     n_edges = 12
     n_faces = 6
+
     def __init__(self, a, *args, **kwargs):
         """__init__(self, a, *args, **kwargs) -> None
         initialize this class.
@@ -37,7 +39,7 @@ class cube(polyhedron):
         """
         self.__shape_name = 'cube'
 
-        self.gamma = [62.1, 64.1, 67.3] # (111), (110), (100)
+        self.gamma = [62.1, 64.1, 67.3]  # (111), (110), (100)
         _NN = mf.MillerNormalVectors_100()
         _DD = np.ones(len(_NN), dtype=float)*0.5
         _GG = np.ones(len(_NN), dtype=float)*self.gamma[2]

@@ -1,24 +1,24 @@
 # -*- coding: utf-8 -*-
 
 # System modules
-import os
 import copy
 import pickle
-import datetime
 import numpy as np
-from numpy.fft import *
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 from mpl_toolkits.mplot3d import Axes3D
 
 # User modules
-from . import mathfunctions as mf
+# from . import mathfunctions as mf
 from .slicefft import slicefft
-from ..shape import *
+from ..shape import particleshape
+
 
 class ensemble_system(slicefft):
     __doc__ = ''' Class which deal with an ensemble of particles.
-    Both `kwargs` for `slicefft` and `ensemble` are necessary for initialization.
+
+    Both `kwargs` for `slicefft` and `ensemble` are necessary for
+    initialization.
 
     kwargs for slicefft
     -------------------
@@ -39,7 +39,7 @@ class ensemble_system(slicefft):
             characteristic length of the shape
         kwargs     : dict
             option (dict object). See the classes in `shape` directory.
-    
+
     Other parameters
     ----------------
     kwargs : option
@@ -86,6 +86,7 @@ class ensemble_system(slicefft):
 
     def doc():
         """ doc() -> str
+
         print the documentation of this class
         """
         for line in ensemble_system.__doc__.split("\n"):
@@ -93,6 +94,7 @@ class ensemble_system(slicefft):
 
     def __init__(self, *args, **kwargs):
         """__init__(self, *args, **kwargs) -> None
+
         initialize this class.
 
         Parameters
@@ -103,8 +105,10 @@ class ensemble_system(slicefft):
         Examples of the way to initialize this class
         --------------------------------------------
         """
-        if len(args) <= 1: # if 0 then kwargs is used
-            if len(args) == 1: # file path or a dict object which self.save() outputs
+        # if 0 then kwargs is used
+        if len(args) <= 1:
+            # file path or a dict object which self.save() outputs
+            if len(args) == 1:
                 if type(args[0]) == str:
                     with open(args[0], "rb") as ff:
                         kwargs_ = pickle.load(ff)
@@ -116,9 +120,9 @@ class ensemble_system(slicefft):
                     kwargs_ = pickle.load(f)
             elif type(args[0]) == dict:
                 kwargs_ = dict(kw_slicefft=args[0], kw_shapes=args[1])
-        else: # if len(args) > 3 then raise Exception
+        else:  # if len(args) > 3 then raise Exception
             raise Exception('Failure.')
-        
+
         weighting_density = kwargs.get("weighting_density")
 
         # Separate parameters
@@ -145,15 +149,17 @@ class ensemble_system(slicefft):
 
     def __InitCoorInfo(self):
         """__InitCoorInfo(self) -> None
+
         initialize attributes for coordinates
         """
         self.__coor_types = ['body', 'surf']
         self.__coor = None
         self.__coor_surf = None
-        self.__euler = [0,0,0]
+        self.__euler = [0, 0, 0]
 
     def save(self, fpath=None):
         """save(self, fpath=None) -> None
+
         save this object as a dict object
 
         Parameters
@@ -163,51 +169,63 @@ class ensemble_system(slicefft):
         """
         if fpath is None:
             fpath = "./ensemble.pickle"
-            print("`fpath` is not assigned. Save this object to {}.".format(fpath))
+            print(
+                "`fpath` is not assigned. Save this object to {}.".format(
+                    fpath
+                )
+            )
         _kw_slicefft = self._kwargs.get("kw_slicefft")
         _kw_slicefft.update(dict(kwargs=self.fftInfo()))
         _kw = dict(kw_slicefft=_kw_slicefft, kw_shapes=self._shape.info())
         with open(fpath, "wb") as f:
             pickle.dump(_kw, f)
-    
+
     def shapeinfo(self):
         """shapeinfo(self) -> list
+
         return a list of information on the shapes in this class
         """
         return self._shape.info()[:]
 
     def a(self):
         """a(self) -> float
+
         return the characteristic length of this instance
         """
         return self._shape.a + 0.0
 
     def a_range(self):
         """a_range(self) -> float
+
         return the characteristic scale of this instance
         """
         return self._shape.a_range + 0.0
 
     def a_max(self):
         """a_max(self) -> float
-        return the maximum of the characteristic lengths of the shapes in this instance
+
+        return the maximum of the characteristic lengths of the shapes
+        in this instance
         """
         return self._shape._as[1:].max()
 
     def shape_name(self):
         """shape_name(self) -> str
+
         return the name of shape
         """
         return self._shape.shape_name()
 
     def n_shapes(self):
         """n_shapes(self) -> int
+
         return the number of shapes in this instance
         """
         return self._shape._n_shapes*1
 
     def Coor(self, coor_type='body', *args, **kwargs):
         """Coor(self, coor_type='body', *args, **kwargs) -> None
+
         calculate the coordinates characterizing the ensemble.
 
         Parameters
@@ -222,41 +240,48 @@ class ensemble_system(slicefft):
         if self._shape is None:
             raise ValueError("No information on the shape.")
         if coor_type not in self.__coor_types:
-            raise ValueError("coor_type must be '{0}' or'{1}'.".format(self.__coor_types[0], self.__coor_types[1]))
+            raise ValueError("coor_type must be '{0}' or'{1}'.".format(
+                self.__coor_types[0], self.__coor_types[1]))
         if coor_type is self.__coor_types[0]:
             _slice = self._shape.Slice
         elif coor_type is self.__coor_types[1]:
             try:
                 _slice = self._shape.SliceSurface
-            except:
-                print('Failure in setting the calculation method for surface coordinates.')
+            except Exception:
+                print(
+                    'Failure in setting the calculation method for surface coordinates.'
+                )
                 print('The method for body coordinates will be used.')
                 _slice = self._shape.Slice
 
-        self.__is_trunc = False if kwargs.get('is_trunc') is None else kwargs.get('is_trunc')
+        self.__is_trunc = False if kwargs.get(
+            'is_trunc') is None else kwargs.get('is_trunc')
 
         _sprange_x, _sprange_y, _sprange_z = \
-            self.range_space(self._shape.a_range,self._shape.a_range,self._shape.a_range)
+            self.range_space(self._shape.a_range,
+                             self._shape.a_range, self._shape.a_range)
         _xx, _yy = np.meshgrid(_sprange_x, _sprange_y)
         dx = self.dx()[0]
-        buff = np.zeros((1,3), dtype=float)
+        buff = np.zeros((1, 3), dtype=float)
         for zz in _sprange_z:
-            coor1 = _slice(_xx, _yy, zz, dx, is_ind=False, is_trunc=self.__is_trunc)
+            coor1 = _slice(_xx, _yy, zz, dx, is_ind=False,
+                           is_trunc=self.__is_trunc)
             buff = np.concatenate((buff, coor1))
 
         if coor_type is self.__coor_types[0]:
-            if buff.shape[0] is 1:
+            if buff.shape[0] == 1:
                 self.__coor = None
             else:
-                self.__coor = buff[1:buff.shape[0],:]
+                self.__coor = buff[1:buff.shape[0], :]
         elif coor_type is self.__coor_types[1]:
-            if buff.shape[0] is 1:
+            if buff.shape[0] == 1:
                 self.__coor_surf = None
             else:
-                self.__coor_surf = buff[1:buff.shape[0],:]
+                self.__coor_surf = buff[1:buff.shape[0], :]
 
     def GetCoor(self, coor_type='body', **kwargs):
         """GetCoor(self, coor_type='body', **kwargs) -> numpy.2darray
+
         return the coordinates characterizing the ensemble.
         If the coordinates has been already calculated, then return them.
 
@@ -275,7 +300,8 @@ class ensemble_system(slicefft):
             the coordinates
         """
         if coor_type not in self.__coor_types:
-            raise ValueError("coor_type must be '{0}' or'{1}'.".format(self.__coor_types[0], self.__coor_types[1]))
+            raise ValueError("coor_type must be '{0}' or'{1}'.".format(
+                self.__coor_types[0], self.__coor_types[1]))
         if coor_type is self.__coor_types[0]:
             if self.__coor is None:
                 self.Coor(coor_type, **kwargs)
@@ -285,11 +311,15 @@ class ensemble_system(slicefft):
                 self.Coor(coor_type, **kwargs)
             coor = self.__coor_surf
         if coor is None:
-            raise ValueError("No information on the coordinates in the surface.")
+            raise ValueError(
+                "No information on the coordinates in the surface.")
         return coor
 
-    def PlotCoor(self, mode="solid", coor_type='body', color='#00fa9a', alpha=0.5):
-        """PlotCoor(self, mode="solid", coor_type='body', color='#00fa9a', alpha=0.5) -> pyplot.figure, pyplot.axes
+    def PlotCoor(self, mode="solid", coor_type='body',
+                 color='#00fa9a', alpha=0.5):
+        """PlotCoor(self, mode="solid", coor_type='body', color='#00fa9a',
+        alpha=0.5) -> pyplot.figure, pyplot.axes
+
         plot the coordinates characterizing the ensemble
 
         Parameters
@@ -297,7 +327,8 @@ class ensemble_system(slicefft):
         mode      : str
             mode of plotting.
             'solid' = plot all the coordinates
-            'surface' = plot the surface of shapes (this is valid for the spheroidal shapes)
+            'surface' = plot the surface of shapes
+            (this is valid for the spheroidal shapes)
         coor_type : str
             type of the coordinates.
             'body' = the whole coordinates
@@ -306,14 +337,14 @@ class ensemble_system(slicefft):
             color code
         alpha     : float
             alpha parameter of color
-        
+
         Returns
         -------
         fig : pyplot.figure
         ax  : pyplot.axes
         """
         if mode == "surface":
-            fig = plt.figure(50, figsize=(6,5), dpi=100)
+            fig = plt.figure(50, figsize=(6, 5), dpi=100)
             plt.clf()
             ax = Axes3D(fig)
             u = np.linspace(0, 2 * np.pi, 30)
@@ -325,23 +356,30 @@ class ensemble_system(slicefft):
             for info in _infos:
                 _center = info.get("kwargs").get("center")
                 _a = info.get("a")
-                ax.plot_surface(_a*x + _center[0], _a*y + _center[1], _a*z + _center[2], rstride=1, cstride=1, color='b', linewidth=0, cmap=cm.ocean)
+                ax.plot_surface(
+                    _a*x + _center[0], _a*y + _center[1], _a*z + _center[2],
+                    rstride=1, cstride=1, color='b', linewidth=0, cmap=cm.ocean
+                )
 
         else:
             if coor_type not in self.__coor_types:
-                raise ValueError("coor_type must be '{0}' or'{1}'.".format(self.__coor_types[0], self.__coor_types[1]))
+                raise ValueError("coor_type must be '{0}' or'{1}'.".format(
+                    self.__coor_types[0], self.__coor_types[1]))
             coor = self.GetCoor(coor_type)
-            fig = plt.figure(50, figsize=(6,5), dpi=100)
+            fig = plt.figure(50, figsize=(6, 5), dpi=100)
             plt.clf()
             ax = Axes3D(fig)
-            ax.scatter(coor[:,0], coor[:,1], coor[:,2], c=color, alpha=alpha)
+            ax.scatter(coor[:, 0], coor[:, 1],
+                       coor[:, 2], c=color, alpha=alpha)
         ax.set_xlabel('x [nm]')
         ax.set_ylabel('y [nm]')
         ax.set_zlabel('z [nm]')
         return fig, ax
 
+
 class ensemble(object):
     """ensemble class
+
     This class represents an ensemble of particles.
     This class is supposed to be used by `ensemble_system`.
     """
@@ -350,6 +388,7 @@ class ensemble(object):
 
     def __init__(self, shapes, weighting=None, *args, **kwargs):
         ''' __init__(self, shapes, weighting=None, *args, **kwargs) -> None
+
         initialize this class
 
         Parameters
@@ -366,7 +405,7 @@ class ensemble(object):
             self._shapes_kwarg = [shapes]
         else:
             self._shapes_kwarg = shapes
-        
+
         # Set weighting mode
         if weighting is None:
             self._weighting = False
@@ -378,7 +417,7 @@ class ensemble(object):
         # Calculate the number of particles
         self._n_shapes = len(self._shapes_kwarg)
 
-        ### Keep information and generate particles
+        # Keep information and generate particles
         self._shapes = [None] * self._n_shapes
         self._shapes_name = [None] * self._n_shapes
         self._centers = np.zeros((self._n_shapes, 3), dtype=float)
@@ -406,6 +445,7 @@ class ensemble(object):
 
     def info(self):
         """info(self) -> list of dict
+
         return the list of information on the shapes in this instence
         """
         kw_list = [None] * self._n_shapes
@@ -415,25 +455,28 @@ class ensemble(object):
 
     def shape_name(self):
         """shape_name(self) -> str
+
         return the name of shape (`ensemble` in case of this class)
         """
         return self._shape_name
 
     def shapes_name(self):
         """shapes_name(self) -> list
+
         return list of names of shapes
         """
         return self._shapes_name[:]
 
     def centers(self, polar=False):
         """centers(self, polar=False) -> numpy.2darray
+
         return the center coordinates of each particle.
 
         Parameters
         ----------
         polar : bool
             if True then the polar coordinates are returned.
-        
+
         Returns
         -------
         centers (polar=False) : numpy.2darray
@@ -444,12 +487,14 @@ class ensemble(object):
             return centers
         else:
             r = np.linalg.norm(centers, axis=1)
-            theta = np.arctan2(np.sqrt(centers[:,0]**2+centers[:,1]**2), centers[:,2])
-            phi = np.arctan2(centers[:,1], centers[:,0]) + np.pi
+            theta = np.arctan2(
+                np.sqrt(centers[:, 0]**2+centers[:, 1]**2), centers[:, 2])
+            phi = np.arctan2(centers[:, 1], centers[:, 0]) + np.pi
             return r, theta, phi
 
     def EulerRot(self, euler):
         """EulerRot(self, euler)
+
         TODO: implementation
         """
         # self.__shape_mother.EulerRot(euler)
@@ -458,6 +503,7 @@ class ensemble(object):
 
     def Slice(self, xx, yy, z, *args, **kwargs):
         """Slice(self, xx, yy, z, *args, **kwargs) -> numpy.2darray
+
         get the positions or indices of the section of polyhedron at `z`.
 
         Parameters
@@ -470,7 +516,7 @@ class ensemble(object):
             is_ind : bool
                 if True, then return the indices of the section.
                 if False, then return the coordinates composing the section.
-        
+
         Returns
         -------
         ind (is_ind=True)  : numpy.2darray
@@ -482,7 +528,7 @@ class ensemble(object):
         is_ind = True if kwargs.get('is_ind') is None else kwargs.get('is_ind')
 
         # Calculate the slices of each particle
-        ind_hit = np.where(abs(z - self._centers[:,2]) <= self._as_range)[0]
+        ind_hit = np.where(abs(z - self._centers[:, 2]) <= self._as_range)[0]
         if len(ind_hit) <= 0:
             ind = np.zeros(xx.shape, dtype=bool)
         else:
@@ -491,12 +537,18 @@ class ensemble(object):
                 if ind is None:
                     ind = self._shapes[jj].Slice(xx, yy, z)
                     if is_ind is True and self._weighting is True:
-                        density_ = 1.0 if self._shapes[jj].density is None else self._shapes[jj].density
+                        if self._shapes[jj].density is None:
+                            density_ = 1.0
+                        else:
+                            density_ = self._shapes[jj].density
                         ind = ind * density_
                 else:
                     ind2 = self._shapes[jj].Slice(xx, yy, z)
                     if is_ind is True and self._weighting is True:
-                        density_ = 1.0 if self._shapes[jj].density is None else self._shapes[jj].density
+                        if self._shapes[jj].density is None:
+                            density_ = 1.0
+                        else:
+                            self._shapes[jj].density
                         ind[ind2] = density_
                     else:
                         ind |= ind2
@@ -505,19 +557,20 @@ class ensemble(object):
         if is_ind is True:
             return ind
         else:
-            ind = ind.reshape(xx.shape[0]*xx.shape[1], 1)[:,0]
+            ind = ind.reshape(xx.shape[0]*xx.shape[1], 1)[:, 0]
             out = np.zeros((np.sum(ind), 3), dtype=float)
-            out[:,0] = xx.reshape(xx.shape[0]*xx.shape[1], 1)[ind,0]
-            out[:,1] = yy.reshape(yy.shape[0]*yy.shape[1], 1)[ind,0]
-            out[:,2] = z
+            out[:, 0] = xx.reshape(xx.shape[0]*xx.shape[1], 1)[ind, 0]
+            out[:, 1] = yy.reshape(yy.shape[0]*yy.shape[1], 1)[ind, 0]
+            out[:, 2] = z
             return out
         pass
 
     def SliceSurface(self, xx, yy, z, width, *args, **kwargs):
         """SliceSurface(self, xx, yy, z, width, *args, **kwargs) -> numpy.2darray
+
         return the surface cross-section.
         Currently implementation is not considered.
-        
+
         Parameters
         ----------
         xx     : numpy.2darray
@@ -529,7 +582,7 @@ class ensemble(object):
             is_ind : bool
                 if True, then return the indices of the section.
                 if False, then return the coordinates composing the section.
-        
+
         Returns
         -------
         ind (is_ind=True)  : numpy.2darray

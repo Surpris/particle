@@ -3,7 +3,8 @@
 import numpy as np
 
 from ..core import mathfunctions as mf
-from .polyhedron import polyhedron, check_poly_validity
+from .polyhedron import polyhedron
+
 
 class cuboctahedron(polyhedron):
     '''cuboctahedron class'''
@@ -38,7 +39,7 @@ class cuboctahedron(polyhedron):
                 flag for random-depth chamferring
         """
 
-        self.gamma = [62.1, 64.1, 67.3] # (111), (110), (100)
+        self.gamma = [62.1, 64.1, 67.3]  # (111), (110), (100)
         self.gamma_max = max(self.gamma)
 
         n_111 = mf.MillerNormalVectors_111()
@@ -65,17 +66,22 @@ class cuboctahedron(polyhedron):
 
     def vertices(self):
         """vertices(self) -> numpy.2darray
+
         return the vertices.
         """
         a = self.a
         out = np.zeros((3, 12))
-        out[0, :] = a/np.sqrt(2)*np.array([1,0,-1,0,1,-1,-1,1,1,0,-1,0])
-        out[1, :] = a/np.sqrt(2)*np.array([0,1,0,-1,1,1,-1,-1,0,1,0,-1])
-        out[2, :] = a/np.sqrt(2)*np.array([1,1,1,1,0,0,0,0,-1,-1,-1,-1])
+        out[0, :] = a/np.sqrt(2)*np.array([1, 0, -1, 0,
+                                           1, -1, -1, 1, 1, 0, -1, 0])
+        out[1, :] = a/np.sqrt(2)*np.array([0, 1, 0, -1,
+                                           1, 1, -1, -1, 0, 1, 0, -1])
+        out[2, :] = a/np.sqrt(2)*np.array([1, 1, 1, 1, 0,
+                                           0, 0, 0, -1, -1, -1, -1])
         return out
 
     def midpoints(self):
         """midpoints(self) -> numpy.2darray
+
         return the midpoints of edges.
         """
         # Parameters.
@@ -102,43 +108,85 @@ class cuboctahedron(polyhedron):
         count = 0
         # Top.
         for ii in range(vrep):
-            out[:, ii] = np.array([(x_top[ii] + x_top[ii+1])/2, (y_top[ii] + y_top[ii+1])/2, (z_top[ii] + z_top[ii+1])/2])
+            out[:, ii] = np.array([
+                (x_top[ii] + x_top[ii+1])/2,
+                (y_top[ii] + y_top[ii+1])/2,
+                (z_top[ii] + z_top[ii+1])/2
+            ])
             count = count + 1
 
-        out[:, count] = np.array([(x_top[3] + x_top[0])/2, (y_top[3] + y_top[0])/2, (z_top[3] + z_top[0])/2])
+        out[:, count] = np.array([
+            (x_top[3] + x_top[0])/2,
+            (y_top[3] + y_top[0])/2,
+            (z_top[3] + z_top[0])/2
+        ])
         count = count + 1
 
         # Between top and medium.
         for ii in range(vrep):
-            out[:, count] = np.array([(x_top[ii] + x_med[ii])/2, (y_top[ii] + y_med[ii])/2, (z_top[ii] + z_med[ii])/2])
-            out[:, count+1] = np.array([(x_top[ii+1] + x_med[ii])/2, (y_top[ii+1] + y_med[ii])/2, (z_top[ii+1] + z_med[ii])/2])
+            out[:, count] = np.array([
+                (x_top[ii] + x_med[ii])/2,
+                (y_top[ii] + y_med[ii])/2,
+                (z_top[ii] + z_med[ii])/2
+            ])
+            out[:, count+1] = np.array([
+                (x_top[ii+1] + x_med[ii])/2,
+                (y_top[ii+1] + y_med[ii])/2,
+                (z_top[ii+1] + z_med[ii])/2
+            ])
             count = count + 2
 
-        out[:, count] = np.array([(x_top[3] + x_med[3])/2, (y_top[3] + y_med[3])/2, (z_top[3] + z_med[3])/2])
-        out[:, count+1] = np.array([(x_top[0] + x_med[3])/2, (y_top[0] + y_med[3])/2, (z_top[0] + z_med[3])/2])
+        out[:, count] = np.array([
+            (x_top[3] + x_med[3])/2,
+            (y_top[3] + y_med[3])/2,
+            (z_top[3] + z_med[3])/2
+        ])
+        out[:, count+1] = np.array([
+            (x_top[0] + x_med[3])/2,
+            (y_top[0] + y_med[3])/2,
+            (z_top[0] + z_med[3])/2
+        ])
         count = count + 2
 
         # Between medium and bottom.
         for ii in range(vrep):
-            out[:, count] = np.array([(x_bot[ii] + x_med[ii])/2, (y_bot[ii] + y_med[ii])/2, (z_bot[ii] + z_med[ii])/2])
-            out[:, count+1] = np.array([(x_bot[ii+1] + x_med[ii])/2, (y_bot[ii+1] + y_med[ii])/2, (z_bot[ii+1] + z_med[ii])/2])
+            out[:, count] = np.array([
+                (x_bot[ii] + x_med[ii])/2,
+                (y_bot[ii] + y_med[ii])/2,
+                (z_bot[ii] + z_med[ii])/2
+            ])
+            out[:, count+1] = np.array([
+                (x_bot[ii+1] + x_med[ii])/2,
+                (y_bot[ii+1] + y_med[ii])/2,
+                (z_bot[ii+1] + z_med[ii])/2
+            ])
             count = count + 2
 
-        out[:, count] = np.array([(x_bot[3] + x_med[3])/2, (y_bot[3] + y_med[3])/2, (z_bot[3] + z_med[3])/2])
-        out[:, count+1] = np.array([(x_bot[0] + x_med[3])/2, (y_bot[0] + y_med[3])/2, (z_bot[0] + z_med[3])/2])
+        out[:, count] = np.array([
+            (x_bot[3] + x_med[3])/2,
+            (y_bot[3] + y_med[3])/2,
+            (z_bot[3] + z_med[3])/2
+        ])
+        out[:, count+1] = np.array([
+            (x_bot[0] + x_med[3])/2,
+            (y_bot[0] + y_med[3])/2,
+            (z_bot[0] + z_med[3])/2
+        ])
         count = count + 2
 
         # Bottom.
         for ii in range(vrep):
-            out[:, count] = np.array([(x_bot[ii] + x_bot[ii+1])/2, (y_bot[ii] + y_bot[ii+1])/2, (z_bot[ii] + z_bot[ii+1])/2])
+            out[:, count] = np.array([
+                (x_bot[ii] + x_bot[ii+1])/2,
+                (y_bot[ii] + y_bot[ii+1])/2,
+                (z_bot[ii] + z_bot[ii+1])/2
+            ])
             count = count + 1
 
-        out[:, count] = np.array([(x_bot[3] + x_bot[0])/2, (y_bot[3] + y_bot[0])/2, (z_bot[3] + z_bot[0])/2])
+        out[:, count] = np.array([
+            (x_bot[3] + x_bot[0])/2,
+            (y_bot[3] + y_bot[0])/2,
+            (z_bot[3] + z_bot[0])/2
+        ])
 
         return out
-
-    def info(self):
-        """info(self) -> dict
-        return the information of this class.
-        """
-        return dict(shape_name=self._shape_name, a=self.a, NN=self._NN, DD=self.DD, kwargs=self._kwargs)
